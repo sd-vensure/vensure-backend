@@ -1,9 +1,9 @@
 const knexConnect = require("../../../knexConnection");
-const { insertDrug, getDrugs, getInnovators } = require("./drugHelper");
+const { insertDrug, getDrugs, getInnovators, insertcomposition } = require("./drugHelper");
 
 const addDrug = async (req, res) => {
     let {
-        drug_name, drug_api, innovator_id
+        drug_name, drug_api, innovator_id, drug_composition
     } = req.body;
 
     drug_name = drug_name ? drug_name.trim() : null
@@ -11,7 +11,9 @@ const addDrug = async (req, res) => {
 
     innovator_id = innovator_id ? innovator_id : null
 
-    if (!(drug_name && drug_api && innovator_id)) {
+    drug_composition = drug_composition && Array.isArray(drug_composition) && drug_composition.length > 0 ? drug_composition : null
+
+    if (!(drug_name && drug_api && innovator_id && drug_composition)) {
         return res.send({
             status: false,
             message: "Please send all details properly"
@@ -20,15 +22,41 @@ const addDrug = async (req, res) => {
 
     try {
 
+        console.log("reached 1")
         let druginsertresp = await insertDrug({
             drug_name, drug_api, innovator_id
         })
 
+        console.log("reached 2")
+
         if (druginsertresp) {
-            return res.send({
-                status: true,
-                message: "Drug inserted successfully."
+
+            // console.log(druginsertresp)
+
+            let temp_array = []
+            drug_composition.map((ele) => {
+                temp_array.push({ "drug_composition_name": ele, "drug_id": druginsertresp })
             })
+
+            console.log(temp_array)
+
+            let insertcompositiondata = await insertcomposition(temp_array);
+
+            if (insertcompositiondata) {
+                return res.send({
+                    status: true,
+                    message: "Drug and Composition added successfully."
+                })
+            }
+            else {
+
+                return res.send({
+                    status: false,
+                    message: "Drug added, Composition not added."
+                })
+
+            }
+
         }
         else {
 
@@ -156,4 +184,4 @@ const getInnovator = async (req, res) => {
 
 
 
-module.exports = { addDrug, getDrug, addInnovator,getInnovator }
+module.exports = { addDrug, getDrug, addInnovator, getInnovator }
