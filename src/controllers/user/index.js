@@ -1,13 +1,13 @@
 const express = require("express");
-const { registerUser, loginUser, testMiddleware, logoutUser } = require("./userController");
+const { registerUser, loginUser, testMiddleware, logoutUser, insertingvalues } = require("./userController");
 const { authMiddlewareUser } = require("../../middleware");
 const router = express.Router();
 
 router.post("/register",registerUser);
 router.post("/login",loginUser)
 router.post("/logout",logoutUser)
-router.post("/testmiddleware",authMiddlewareUser,testMiddleware)
-// router.put("/update", updateCustomer)
-// router.post("/get", getCustomer)
+router.post("/testmiddleware",authMiddlewareUser,testMiddleware);
+
+router.get("/inserting-values",insertingvalues)
 
 module.exports = router

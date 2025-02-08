@@ -5,7 +5,7 @@ const moment = require("moment")
 const addPaf = async (req, res) => {
     let {
         client_information, driving_market, paf_initiated_on, brief_scope, api_sources, sku, import_license_api, import_license_rld, drug_id,
-        composition_array, stakeholders
+        composition_array, stakeholders,master_type
     } = req.body;
 
 
@@ -25,11 +25,12 @@ const addPaf = async (req, res) => {
     import_license_rld = import_license_rld ? import_license_rld.trim() : null
 
     drug_id = drug_id ? drug_id : null
+    master_type = master_type ? master_type : null
 
     let paf_unique = "PAF-TEST";
 
 
-    if (!(stakeholders && compositions_selected && client_information && driving_market && paf_initiated_on && brief_scope && api_sources && sku && import_license_api && import_license_rld)) {
+    if (!(stakeholders && master_type && compositions_selected && client_information && driving_market && paf_initiated_on && brief_scope && api_sources && sku && import_license_api && import_license_rld)) {
         return res.send({
             status: false,
             message: "Please provide all details"
@@ -61,7 +62,7 @@ const addPaf = async (req, res) => {
         // Create the linear string
         paf_unique = `VE/21/${startDateFormatted}-${endDateFormatted}/${finalcount}`;
 
-        const insertpaf = await pafInsert({ client_information, driving_market, paf_initiated_on, brief_scope, api_sources, sku, import_license_api, import_license_rld, paf_unique, drug_id, compositions_selected,stakeholders })
+        const insertpaf = await pafInsert({ client_information, driving_market, paf_initiated_on, brief_scope, api_sources, sku, import_license_api, import_license_rld, paf_unique, drug_id, compositions_selected,stakeholders,"master_type_id":master_type })
 
         if (insertpaf) {
             return res.send({
@@ -192,4 +193,30 @@ const viewStakeHolder = async (req, res) => {
 
 }
 
-module.exports = { addPaf, getPaf, addStakeHolder, viewStakeHolder }
+
+const getMasterTypes = async (req, res) => {
+
+    try {
+
+        let query = knexConnect("master_type").select("*")
+
+        let response = await query;
+
+        return res.send({
+            status: true,
+            message: "MasterTypes List found.",
+            data: response
+        })
+
+
+    } catch (error) {
+        console.log(error)
+        return res.send({
+            status: false,
+            message: "Something went wrong"
+        })
+    }
+
+}
+
+module.exports = { addPaf, getPaf, addStakeHolder, viewStakeHolder, getMasterTypes }
