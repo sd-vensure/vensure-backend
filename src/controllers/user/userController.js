@@ -1,7 +1,9 @@
 const argon2d = require("argon2");
 const knexConnect = require("../../../knexConnection");
 const { isValidEmail, isIndianMobileNumber } = require("./userHElper");
-const { comparePassword, generateToken } = require("../../helpers");
+const { comparePassword, generateToken, generateRefreshToken, generateAccessToken } = require("../../helpers");
+const date = require('date-and-time');
+const { saveRefresh, checkRefresh, deleteRefresh } = require("../refresh/refreshHelper");
 
 const registerUser = async (req, res) => {
     let {
@@ -156,6 +158,18 @@ const loginUser = async (req, res) => {
             delete userdata.user_password;
 
 
+            const refreshTokenExpire = process.env.COOKIE_EXPIRE_TIME_HOURS;
+            const refreshToken = generateRefreshToken(userdata.user_first_name);
+            const accessToken = generateAccessToken(userdata.user_first_name);
+            let now = new Date();
+            const createdAt = date.format(now, 'YYYY-MM-DD HH:mm:ss');
+            const expiryAt = date.format(date.addHours(now, +refreshTokenExpire), 'YYYY-MM-DD HH:mm:ss');
+            const saveToken = await saveRefresh(userdata.user_first_name, refreshToken, createdAt, expiryAt);
+            // res.cookie('refreshJwt', refreshToken, { httpOnly: true });
+            res.cookie('refreshJwt', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: process.env.COOKIE_EXPIRE_TIME_HOURS * 60 * 60 * 1000 });
+
+
+
             return res.send({
                 status: true,
                 message: "Login Successfull",
@@ -185,11 +199,43 @@ const loginUser = async (req, res) => {
 const testMiddleware = async (req, res) => {
 
     res.send({
-        "status":true,
-        "userid":req.user_id,
-        "email":req.user_email
+        "status": true,
+        "userid": req.user_id,
+        "email": req.user_email
     })
 
 }
 
-module.exports = { registerUser, loginUser,testMiddleware }
+const logoutUser=async (req, res) => {
+    const cookies = req.cookies;
+    if (!cookies?.refreshJwt) {
+        res.status(200).json({ status: false, message: "No Cookie Found" });
+    }
+    else {
+        const refreshToken = cookies.refreshJwt;
+        const findRefresh = await checkRefresh(refreshToken);
+        if (!findRefresh) {
+            // res.clearCookie('refreshJwt', { httpOnly: true });
+            res.cookie('refreshJwt', "", {
+                httpOnly: true,
+                sameSite: 'None', // Allow cross-site cookies
+                secure: process.env.NODE_ENV === 'production', // Only set 'secure' in production environment
+                maxAge: process.env.COOKIE_EXPIRE_TIME_HOURS * 60 * 60 * 1000
+              });
+            res.status(200).json({ status: true, message: "Admin Logged Out" });
+        }
+        else if (findRefresh) {
+            const deleteToken = await deleteRefresh(refreshToken);
+            // res.clearCookie('refreshJwt', { httpOnly: true });
+            res.cookie('refreshJwt', "", {
+                httpOnly: true,
+                sameSite: 'None', // Allow cross-site cookies
+                secure: process.env.NODE_ENV === 'production', // Only set 'secure' in production environment
+                maxAge: process.env.COOKIE_EXPIRE_TIME_HOURS * 60 * 60 * 1000
+              });
+            res.status(200).json({ status: true, message: "Admin Logged Out" });
+        }
+    }
+}
+
+module.exports = { registerUser, loginUser, testMiddleware,logoutUser }

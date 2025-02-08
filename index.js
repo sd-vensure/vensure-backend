@@ -2,8 +2,11 @@ require('dotenv').config();
 const express = require('express')
 const cors = require("cors");
 const routes = require("./src/routes");
+const cookieParser = require('cookie-parser');
 
 const app = express();
+
+app.use(cookieParser());
 
 // const allowedOrigins = process.env.ALLOWED_ORIGINS
 //   ? process.env.ALLOWED_ORIGINS.split(',')

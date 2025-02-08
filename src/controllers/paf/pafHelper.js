@@ -74,7 +74,8 @@ const pafGet=async(id)=>{
                 'i.*',
                 'dc.drug_composition_id as composition_id',
                 'dc.drug_composition_name as composition_name'
-            );
+            )
+            .orderBy('pd.paf_id'); // Order by paf_id
     
         if (id) {
             query = query.where('pd.paf_id', id);
@@ -137,6 +138,7 @@ const pafGet=async(id)=>{
         console.log(error);
         return false;
     }
+    
     
     
 }

@@ -1,3 +1,5 @@
+const knexConnect = require("../../../knexConnection");
+
 const isIndianMobileNumber = (number) => {
     // Check if length is 10 and if it contains only digits
     const isTenDigits = number ? number.length === 10 : false;
@@ -15,4 +17,43 @@ const isValidEmail = (email) => {
     return email ? emailPattern.test(email) : false;
 }
 
-module.exports = { isIndianMobileNumber, isValidEmail }
+
+const checkUser = async (user_id) => {
+   
+    try {
+        const resp = await knexConnect('user')
+            .select("*")
+            .where('user_first_name', user_id);
+
+        // console.log(resp)
+
+        if (resp === undefined) {
+
+            return {
+                status: false,
+                data: undefined,
+                message: "No Such User Exists"
+            }
+
+        }
+        else {
+            return {
+                status: true,
+                data: resp[0],
+                message: "Data Found"
+            }
+        }
+
+    } catch (error) {
+        return {
+            status: false,
+            message: "Something Went Wrong",
+            error: "Something Went Wrong",
+            actualError: error
+        }
+    }
+
+
+}
+
+module.exports = { isIndianMobileNumber, isValidEmail,checkUser }

@@ -75,4 +75,22 @@ const generateAlphanumericToken = (lengthtoken) => {
     return token;
 }
 
-module.exports = { generateToken, comparePassword, generateOtp, compareOTPs, compareTimeRange, generateAlphanumericToken }
+const generateRefreshToken = (user_id) => {
+    const refreshToken = jwt.sign(
+        { "user_id": user_id },
+        process.env.REFRESH_PRIVATE_KEY,
+        { expiresIn: process.env.REFRESH_EXPIRE_TIME }
+    );
+    return refreshToken;
+}
+
+const generateAccessToken = (user_id) => {
+    const accessToken = jwt.sign(
+        { "user_id": user_id },
+        process.env.ACCESS_PRIVATE_KEY,
+        { expiresIn: process.env.ACCESS_EXPIRE_TIME }
+    );
+    return accessToken;
+}
+
+module.exports = { generateToken, comparePassword, generateOtp, compareOTPs, compareTimeRange, generateAlphanumericToken, generateRefreshToken, generateAccessToken }
