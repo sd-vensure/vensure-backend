@@ -1,15 +1,17 @@
 const knexConnect = require("../../../knexConnection");
+const { getMasterFormforMasterId, insertNewPafForm } = require("../form/formHelper");
 const { pafInsert, pafGet } = require("./pafHelper");
 const moment = require("moment")
 
 const addPaf = async (req, res) => {
     let {
         client_information, driving_market, paf_initiated_on, brief_scope, api_sources, sku, import_license_api, import_license_rld, drug_id,
-        composition_array, stakeholders,master_type
+        composition_array, stakeholders, master_type,include_form_headers
     } = req.body;
 
 
     let compositions_selected = composition_array && Array.isArray(composition_array) && composition_array.length > 0 ? JSON.stringify(composition_array) : null;
+    include_form_headers = include_form_headers && Array.isArray(include_form_headers) && include_form_headers.length > 0 ? include_form_headers : null;
     stakeholders = stakeholders && Array.isArray(stakeholders) && stakeholders.length > 0 ? JSON.stringify(stakeholders) : null;
 
     client_information = client_information ? client_information.trim() : null;
@@ -30,7 +32,7 @@ const addPaf = async (req, res) => {
     let paf_unique = "PAF-TEST";
 
 
-    if (!(stakeholders && master_type && compositions_selected && client_information && driving_market && paf_initiated_on && brief_scope && api_sources && sku && import_license_api && import_license_rld)) {
+    if (!(include_form_headers && stakeholders && master_type && compositions_selected && client_information && driving_market && paf_initiated_on && brief_scope && api_sources && sku && import_license_api && import_license_rld)) {
         return res.send({
             status: false,
             message: "Please provide all details"
@@ -56,19 +58,69 @@ const addPaf = async (req, res) => {
         const endDateFormatted = parseInt(endDate.format('YY')) + 1;
 
         let count = await knexConnect("paf_details").count('* as count');
-        let finalcount=parseInt(count[0].count)+1;
+        let finalcount = parseInt(count[0].count) + 1;
         // console.log(count[0].count);
 
         // Create the linear string
         paf_unique = `VE/21/${startDateFormatted}-${endDateFormatted}/${finalcount}`;
 
-        const insertpaf = await pafInsert({ client_information, driving_market, paf_initiated_on, brief_scope, api_sources, sku, import_license_api, import_license_rld, paf_unique, drug_id, compositions_selected,stakeholders,"master_type_id":master_type })
+        const insertpaf = await pafInsert({ client_information, driving_market, paf_initiated_on, brief_scope, api_sources, sku, import_license_api, import_license_rld, paf_unique, drug_id, compositions_selected, stakeholders, "master_type_id": master_type })
 
         if (insertpaf) {
-            return res.send({
-                status: true,
-                message: "PAF added successfully"
-            })
+
+            // console.log(insertpaf,"this is inserpaf")
+
+            let formsdata = await getMasterFormforMasterId(master_type);
+
+            if (formsdata.length > 0) {
+                let finaldata = formsdata.map((row, index) => {
+
+                    let findpaf=include_form_headers.find((ee)=>ee.master_header_id==row.master_header_id)
+
+                    return {
+                        pafform_type_id: row.master_type_id,
+                        pafform_header_id: row.master_header_id,
+                        pafform_item_id: row.master_item_id,
+                        pafform_subitem_id: row.master_subitem_id,
+                        pafform_item_name: row.master_item_name,
+                        header_status:findpaf.status_selected,
+                        pafform_target:findpaf.target_date_selected,
+                        header_timeline:findpaf.timeline_selected,
+                        paf_id: insertpaf // Add your custom 'paf_id' here
+                    };
+                });
+
+                const insertpafform = await insertNewPafForm(finaldata)
+
+                if (insertpafform) {
+
+                    return res.send({
+                        status: true,
+                        message: "PAf and Form created successfully."
+                    })
+
+                }
+                else {
+
+                    return res.send({
+                        status: false,
+                        message: "PAf Created,Master Form found but New PAF Form not created"
+                    })
+
+                }
+
+            }
+            else {
+
+                return res.send({
+                    status: false,
+                    message: "PAF created no master form found"
+                })
+
+            }
+
+
+
         }
         else {
             return res.send({
@@ -198,14 +250,31 @@ const getMasterTypes = async (req, res) => {
 
     try {
 
-        let query = knexConnect("master_type").select("*")
+        const response =await knexConnect("master_type")
+            .select("*")
+            .join("master_form", "master_type.master_type_id", "=", "master_form.master_type_id")
+            .whereNull("master_form.master_item_id")
+            .whereNull("master_form.master_subitem_id");
 
-        let response = await query;
+
+
+        const transformedData = response.reduce((acc, { master_type_id, master_type_name, ...rest }) => {
+            let typeGroup = acc.find(item => item.master_type_id === master_type_id);
+        
+            if (!typeGroup) {
+                typeGroup = { master_type_id, master_type_name, items: [] };
+                acc.push(typeGroup);
+            }
+        
+            typeGroup.items.push(rest);
+            
+            return acc;
+        }, []);
 
         return res.send({
             status: true,
             message: "MasterTypes List found.",
-            data: response
+            data: transformedData
         })
 
 

@@ -3,17 +3,18 @@ const { insertDrug, getDrugs, getInnovators, insertcomposition } = require("./dr
 
 const addDrug = async (req, res) => {
     let {
-        drug_name, drug_api, innovator_id, drug_composition
+        drug_name, drug_api, innovator_id, drug_composition, master_type_id
     } = req.body;
 
     drug_name = drug_name ? drug_name.trim() : null
     drug_api = drug_api ? drug_api.trim() : null
 
     innovator_id = innovator_id ? innovator_id : null
+    master_type_id = master_type_id ? master_type_id : null
 
     drug_composition = drug_composition && Array.isArray(drug_composition) && drug_composition.length > 0 ? drug_composition : null
 
-    if (!(drug_name && drug_api && innovator_id && drug_composition)) {
+    if (!(drug_name && master_type_id && drug_api && innovator_id && drug_composition)) {
         return res.send({
             status: false,
             message: "Please send all details properly"
@@ -24,7 +25,7 @@ const addDrug = async (req, res) => {
 
         console.log("reached 1")
         let druginsertresp = await insertDrug({
-            drug_name, drug_api, innovator_id
+            drug_name, drug_api, innovator_id,master_type_id
         })
 
         console.log("reached 2")

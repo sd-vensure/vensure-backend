@@ -2,8 +2,8 @@ const knexConnect = require("../../../knexConnection")
 
  const pafInsert = async(data) => {
     try {
-        const insertresp=await knexConnect("paf_details").insert(data)
-        return true;
+        const insertresp=await knexConnect("paf_details").insert(data);
+        return insertresp[0];
     } catch (error) {
         console.log(error)
         return false;

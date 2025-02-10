@@ -14,7 +14,6 @@ const insertDrug = async (data) => {
 
     }
 
-
 }
 
 const insertcomposition = async (data) => {
@@ -92,6 +91,7 @@ const getDrugs = async (id) => {
                         drug_api: item.drug_api,
                         innovator_id: item.innovator_id,
                         innovator_name: item.innovator_name,
+                        master_type_id:item.master_type_id,
                         drug_active: item.drug_active,
                         compositions: []
                     });
