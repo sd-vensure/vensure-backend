@@ -141,17 +141,11 @@ const loginUser = async (req, res) => {
 
             let encryptdata = {
                 user_id: userdata.user_id,
-                user_email: userdata.user_email
+                user_email: userdata.user_email,
+                user_name: userdata.user_first_name
             }
 
-            let tokengenerated = generateToken(encryptdata)
-
-            let updatetoken = await knexConnect("user")
-                .update({
-                    "user_token_login": tokengenerated,
-                    "user_updated_at": knexConnect.raw('UTC_TIMESTAMP()')
-                })
-                .where("user_id", userdata.user_id);
+            // let tokengenerated = generateToken(encryptdata)
 
             delete userdata.user_active;
             delete userdata.user_token_login;
@@ -159,8 +153,8 @@ const loginUser = async (req, res) => {
 
 
             const refreshTokenExpire = process.env.COOKIE_EXPIRE_TIME_HOURS;
-            const refreshToken = generateRefreshToken(userdata.user_first_name);
-            const accessToken = generateAccessToken(userdata.user_first_name);
+            const refreshToken = generateRefreshToken(encryptdata);
+            const accessToken = generateAccessToken(encryptdata);
             let now = new Date();
             const createdAt = date.format(now, 'YYYY-MM-DD HH:mm:ss');
             const expiryAt = date.format(date.addHours(now, +refreshTokenExpire), 'YYYY-MM-DD HH:mm:ss');
@@ -174,7 +168,7 @@ const loginUser = async (req, res) => {
                 status: true,
                 message: "Login Successfull",
                 data: userdata,
-                token: tokengenerated
+                token: accessToken
             })
 
         }

@@ -6,8 +6,8 @@ const date = require('date-and-time');
 const generateToken = (data) => {
     return jwt.sign(
         data,
-        process.env.SECRET_KEY,
-        { expiresIn: process.env.TOKEN_EXPIRY }
+        process.env.JWT_TOKEN_KEY,
+        { expiresIn: process.env.JWT_EXPIRE_TIME }
     );
 }
 
@@ -75,18 +75,18 @@ const generateAlphanumericToken = (lengthtoken) => {
     return token;
 }
 
-const generateRefreshToken = (user_id) => {
+const generateRefreshToken = (data) => {
     const refreshToken = jwt.sign(
-        { "user_id": user_id },
+        data,
         process.env.REFRESH_PRIVATE_KEY,
         { expiresIn: process.env.REFRESH_EXPIRE_TIME }
     );
     return refreshToken;
 }
 
-const generateAccessToken = (user_id) => {
+const generateAccessToken = (data) => {
     const accessToken = jwt.sign(
-        { "user_id": user_id },
+        data,
         process.env.ACCESS_PRIVATE_KEY,
         { expiresIn: process.env.ACCESS_EXPIRE_TIME }
     );

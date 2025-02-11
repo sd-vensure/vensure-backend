@@ -23,7 +23,7 @@ const checkUser = async (user_id) => {
     try {
         const resp = await knexConnect('user')
             .select("*")
-            .where('user_first_name', user_id);
+            .where('user_id', user_id);
 
         // console.log(resp)
 

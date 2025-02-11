@@ -15,17 +15,17 @@ const authMiddlewareUser = async (req, res, next) => {
             // console.log(authHeader)
             jwt.verify(
                 token,
-                process.env.SECRET_KEY,
+                process.env.ACCESS_PRIVATE_KEY,
                 async (err, decoded) => {
                     if (err) {
                         console.log(err)
-                        return res.status(200).json({ status: false, message: "Token Expired or Broken" });
+                        return res.status(403).json({ status: false, message: "Token Expired or Broken" });
                     }
 
                     if (decoded) {
-                        console.log(decoded)
                         req.user_id = decoded.user_id;
                         req.user_email = decoded.user_email;
+                        req.user_name = decoded.user_name;
                         next();
                         // return res.status(200).json({ status: true, data: decoded });
                     }
