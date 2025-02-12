@@ -90,7 +90,7 @@ const addPaf = async (req, res) => {
                         pafform_subitem_id: row.master_subitem_id,
                         pafform_item_name: row.master_item_name,
                         header_status: findpaf.status_selected,
-                        pafform_target: findpaf.target_date_selected,
+                        pafform_target: findpaf.target_date_selected.trim() == "" ? null : findpaf.target_date_selected,
                         header_timeline: findpaf.timeline_selected,
                         paf_id: insertpaf // Add your custom 'paf_id' here
                     };
@@ -146,6 +146,119 @@ const addPaf = async (req, res) => {
 
     }
 
+
+}
+
+const addPafNew = async (req, res) => {
+    let {
+        drug_name,
+        drug_api,
+        drug_innovator,
+        compositions,
+        master_type_id,
+        client_name,
+        brief_scope,
+        sku,
+        api_sources,
+        import_license_rld,
+        import_license_api,
+        selectedcountry,
+        selectedstakeholders
+    } = req.body;
+
+    let paf_created_by = req.user_name || "NA"
+
+    if (paf_created_by == "NA") {
+        return res.send({
+            status: false,
+            message: "Please login and try again"
+        })
+    }
+
+    drug_name = drug_name ? drug_name.trim() : null;
+    drug_api = drug_api ? drug_api.trim() : null;
+    drug_innovator = drug_innovator ? drug_innovator.trim() : null;
+    compositions = compositions ? compositions.trim() : null;
+    master_type_id = master_type_id ? master_type_id.trim() : null;
+    client_name = client_name ? client_name.trim() : null;
+    brief_scope = brief_scope ? brief_scope.trim() : null;
+    sku = sku ? sku.trim() : null;
+    api_sources = api_sources ? api_sources.trim() : null;
+    import_license_rld = import_license_rld ? import_license_rld.trim() : null;
+    import_license_api = import_license_api ? import_license_api.trim() : null;
+
+    selectedcountry = selectedcountry && Array.isArray(selectedcountry) && selectedcountry.length > 0 ? JSON.stringify(selectedcountry) : null;
+    selectedstakeholders = selectedstakeholders && Array.isArray(selectedstakeholders) && selectedstakeholders.length > 0 ? JSON.stringify(selectedstakeholders) : null;
+
+    let count = await knexConnect("paf_details")
+        .count('* as count')
+        .where('paf_unique', 'like', '%01'); 
+
+    let finalcount = parseInt(count[0].count) + 1;
+    let financialyear = getFinancialYear()
+    
+    let paf_unique = `VE/${finalcount}/${financialyear}/01`;
+
+    let formattedDate = moment().format('YYYY-MM-DD HH:mm:ss');
+
+    if (!(selectedcountry && selectedstakeholders && drug_name && drug_api && drug_innovator && compositions && master_type_id && client_name && brief_scope && sku && api_sources && import_license_rld && import_license_api)) {
+        return res.send({
+            status: false,
+            message: "Please provide all details"
+        })
+    }
+
+    try {
+
+        let sendobj={
+        drug_name,
+        drug_api,
+        drug_innovator,
+        compositions,
+        master_type_id,
+        client_name,
+        brief_scope,
+        sku,
+        api_sources,
+        import_license_rld,
+        import_license_api,
+        "driving_market":selectedcountry,
+        "stakeholders":selectedstakeholders,
+        paf_unique,
+        paf_created_by,
+        paf_created_at:formattedDate
+        }
+
+        const insertpaf=await pafInsert(sendobj);
+
+        if(insertpaf)
+        {
+
+            return res.send({
+                status: true,
+                message: "PAF added successfully."
+            })
+
+        }
+        else{
+
+            return res.send({
+                status: false,
+                message: "Could not insert PAF"
+            })
+
+        }
+
+
+    } catch (error) {
+
+        return res.send({
+            status: false,
+            message: "Something went wrong",
+            data:error.message
+        })
+
+    }
 
 }
 
@@ -396,7 +509,7 @@ const revisePAF = async (req, res) => {
         // Replace the old last part with the incremented value
         let newPafUnique = paf_unique.slice(0, paf_unique.lastIndexOf('/') + 1) + incrementedLastPart;
 
-        paf_unique=newPafUnique;
+        paf_unique = newPafUnique;
 
         let formattedDate = moment().format('YYYY-MM-DD HH:mm:ss');
 
@@ -418,7 +531,7 @@ const revisePAF = async (req, res) => {
                         pafform_subitem_id: row.master_subitem_id,
                         pafform_item_name: row.master_item_name,
                         header_status: findpaf.status_selected,
-                        pafform_target: findpaf.target_date_selected,
+                        pafform_target: findpaf.target_date_selected.trim() == "" ? null : findpaf.target_date_selected,
                         header_timeline: findpaf.timeline_selected,
                         paf_id: insertpaf // Add your custom 'paf_id' here
                     };
@@ -477,4 +590,4 @@ const revisePAF = async (req, res) => {
 
 }
 
-module.exports = { addPaf, getPaf, addStakeHolder, viewStakeHolder, getMasterTypes, approvePaf, revisePAF }
+module.exports = { addPaf, getPaf, addPafNew, addStakeHolder, viewStakeHolder, getMasterTypes, approvePaf, revisePAF }

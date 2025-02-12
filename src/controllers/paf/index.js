@@ -1,9 +1,11 @@
 const express = require("express");
-const { addPaf, getPaf, addStakeHolder, viewStakeHolder, getMasterTypes, approvePaf, revisePAF } = require("./pafController");
+const { addPaf, getPaf, addStakeHolder, viewStakeHolder, getMasterTypes, approvePaf, revisePAF, addPafNew } = require("./pafController");
 const { authMiddlewareUser } = require("../../middleware");
 const router = express.Router();
 
-router.post("/add",authMiddlewareUser,addPaf);
+// router.post("/add",authMiddlewareUser,addPaf);
+router.post("/add-new",authMiddlewareUser,addPafNew);
+
 router.post("/revise",authMiddlewareUser,revisePAF);
 router.post("/approve/:pafid",authMiddlewareUser,approvePaf);
 router.get("/get",getPaf);
