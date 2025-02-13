@@ -45,7 +45,15 @@ const getToken = async (req, res) => {
                                 user_id, user_email, user_name
                             }
                             const accessToken = generateAccessToken(datatoencrypt);
-                            return res.status(200).json({ status: true, data: check.data, token: accessToken, message: "New Token Generated Successfully" });
+
+                            console.log(check.data)
+                            let userdata=null
+                            let rolesreturn = check.data.roles == "" ? [] : JSON.parse(check.data.roles)
+
+                            userdata = { ...check.data, "roles": rolesreturn }
+
+
+                            return res.status(200).json({ status: true, data: userdata, token: accessToken, message: "New Token Generated Successfully" });
                         }
                     }
                 }

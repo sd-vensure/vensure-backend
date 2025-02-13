@@ -1,6 +1,7 @@
 const knexConnect = require("../../../knexConnection");
 const { getMasterFormforMasterId, insertNewPafForm } = require("../form/formHelper");
 const { pafInsert, pafGet, approvePafCall, getFinancialYear } = require("./pafHelper");
+const { insertNewBudget } = require("../budget/budgetHelper");
 const moment = require("moment")
 
 const addPaf = async (req, res) => {
@@ -192,11 +193,11 @@ const addPafNew = async (req, res) => {
 
     let count = await knexConnect("paf_details")
         .count('* as count')
-        .where('paf_unique', 'like', '%01'); 
+        .where('paf_unique', 'like', '%01');
 
     let finalcount = parseInt(count[0].count) + 1;
     let financialyear = getFinancialYear()
-    
+
     let paf_unique = `VE/${finalcount}/${financialyear}/01`;
 
     let formattedDate = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -210,29 +211,28 @@ const addPafNew = async (req, res) => {
 
     try {
 
-        let sendobj={
-        drug_name,
-        drug_api,
-        drug_innovator,
-        compositions,
-        master_type_id,
-        client_name,
-        brief_scope,
-        sku,
-        api_sources,
-        import_license_rld,
-        import_license_api,
-        "driving_market":selectedcountry,
-        "stakeholders":selectedstakeholders,
-        paf_unique,
-        paf_created_by,
-        paf_created_at:formattedDate
+        let sendobj = {
+            drug_name,
+            drug_api,
+            drug_innovator,
+            compositions,
+            master_type_id,
+            client_name,
+            brief_scope,
+            sku,
+            api_sources,
+            import_license_rld,
+            import_license_api,
+            "driving_market": selectedcountry,
+            "stakeholders": selectedstakeholders,
+            paf_unique,
+            paf_created_by,
+            paf_created_at: formattedDate
         }
 
-        const insertpaf=await pafInsert(sendobj);
+        const insertpaf = await pafInsert(sendobj);
 
-        if(insertpaf)
-        {
+        if (insertpaf) {
 
             return res.send({
                 status: true,
@@ -240,7 +240,7 @@ const addPafNew = async (req, res) => {
             })
 
         }
-        else{
+        else {
 
             return res.send({
                 status: false,
@@ -255,7 +255,7 @@ const addPafNew = async (req, res) => {
         return res.send({
             status: false,
             message: "Something went wrong",
-            data:error.message
+            data: error.message
         })
 
     }
@@ -368,11 +368,18 @@ const viewStakeHolder = async (req, res) => {
 
 const getMasterTypes = async (req, res) => {
 
+    let masterId = req.query.masterId || null
+
     try {
 
         const response = await knexConnect("master_type")
             .select("*")
             .join("master_form", "master_type.master_type_id", "=", "master_form.master_type_id")
+            .modify(query => {
+                if (masterId) {
+                    query.where("master_type.master_type_id", masterId);
+                }
+            })
             .whereNull("master_form.master_item_id")
             .whereNull("master_form.master_subitem_id");
 
@@ -590,4 +597,81 @@ const revisePAF = async (req, res) => {
 
 }
 
-module.exports = { addPaf, getPaf, addPafNew, addStakeHolder, viewStakeHolder, getMasterTypes, approvePaf, revisePAF }
+const createPAFForm = async (req, res) => {
+
+    let { include_form_headers, master_type_id, paf_id,paf_unique } = req.body;
+
+    include_form_headers = include_form_headers && Array.isArray(include_form_headers) && include_form_headers.length > 0 ? include_form_headers : null;
+
+    try {
+
+        let formsdata = await getMasterFormforMasterId(master_type_id);
+
+        if (formsdata.length > 0) {
+            let finaldata = formsdata.map((row, index) => {
+
+                let findpaf = include_form_headers.find((ee) => ee.master_header_id == row.master_header_id)
+
+                return {
+                    pafform_type_id: row.master_type_id,
+                    pafform_header_id: row.master_header_id,
+                    pafform_item_id: row.master_item_id,
+                    pafform_subitem_id: row.master_subitem_id,
+                    pafform_item_name: row.master_item_name,
+                    header_status: findpaf.status_selected,
+                    pafform_target: findpaf.target_date_selected.trim() == "" ? null : findpaf.target_date_selected,
+                    header_timeline: findpaf.timeline_selected,
+                    pafform_team: findpaf.department,
+                    paf_id: paf_id // Add your custom 'paf_id' here
+                };
+            });
+
+            let budgetdata=[];
+
+            include_form_headers.map((ele)=>{
+                budgetdata.push({
+                    "paf_id":paf_id,
+                    "paf_unique":paf_unique,
+                    "department_id":ele.department_id,
+                    "department_name":ele.department
+                })
+            })
+
+            let insertbudget=await insertNewBudget(budgetdata)
+
+            const insertpafform = await insertNewPafForm(finaldata)
+
+            if (insertpafform) {
+
+                let updatesttaus=await knexConnect("paf_details").update({assign_departments:"Y"}).where("paf_id",paf_id)
+
+                return res.send({
+                    status: true,
+                    message: "PAF form created"
+                })
+            }
+            else {
+                return res.send({
+                    status: true,
+                    message: "Could not add PAF form."
+                })
+            }
+
+        }
+        else {
+            return res.send({
+                status: false,
+                message: "Could not fetch the master forms."
+            })
+        }
+
+    } catch (error) {
+        return res.send({
+            status: false,
+            message: "Something went wrong"
+        })
+    }
+
+}
+
+module.exports = { addPaf, getPaf, addPafNew, addStakeHolder, viewStakeHolder, getMasterTypes, approvePaf, revisePAF, createPAFForm }
