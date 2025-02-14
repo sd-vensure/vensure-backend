@@ -133,12 +133,13 @@ const pafGet = async (id) => {
 
 }
 
-const approvePafCall = async (pafid, approvename, dateandtime) => {
+const approvePafCall = async (pafid, approvename, dateandtime,status) => {
     try {
 
         let resp = await knexConnect("paf_details").update({
             "paf_approved_by": approvename,
             "paf_approved_at": dateandtime,
+            "paf_approved_status":status
         }).where("paf_id", pafid);
 
         return true;

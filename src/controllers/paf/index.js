@@ -9,7 +9,7 @@ router.post("/add-new",authMiddlewareUser,addPafNew);
 router.post("/create-paf-form",authMiddlewareUser,createPAFForm)
 
 router.post("/revise",authMiddlewareUser,revisePAF);
-router.post("/approve/:pafid",authMiddlewareUser,approvePaf);
+router.post("/status-change/:pafid",authMiddlewareUser,approvePaf);
 router.get("/get",getPaf);
 
 router.post("/add-stakeholder",addStakeHolder);

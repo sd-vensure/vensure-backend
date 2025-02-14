@@ -150,6 +150,119 @@ const addPaf = async (req, res) => {
 
 }
 
+// const addPafNew = async (req, res) => {
+//     let {
+//         drug_name,
+//         drug_api,
+//         drug_innovator,
+//         compositions,
+//         master_type_id,
+//         client_name,
+//         brief_scope,
+//         sku,
+//         api_sources,
+//         import_license_rld,
+//         import_license_api,
+//         selectedcountry,
+//         selectedstakeholders
+//     } = req.body;
+
+//     let paf_created_by = req.user_name || "NA"
+
+//     if (paf_created_by == "NA") {
+//         return res.send({
+//             status: false,
+//             message: "Please login and try again"
+//         })
+//     }
+
+//     drug_name = drug_name ? drug_name.trim() : null;
+//     drug_api = drug_api ? drug_api.trim() : null;
+//     drug_innovator = drug_innovator ? drug_innovator.trim() : null;
+//     compositions = compositions ? compositions.trim() : null;
+//     master_type_id = master_type_id ? master_type_id.trim() : null;
+//     client_name = client_name ? client_name.trim() : null;
+//     brief_scope = brief_scope ? brief_scope.trim() : null;
+//     sku = sku ? sku.trim() : null;
+//     api_sources = api_sources ? api_sources.trim() : null;
+//     import_license_rld = import_license_rld ? import_license_rld.trim() : null;
+//     import_license_api = import_license_api ? import_license_api.trim() : null;
+
+//     selectedcountry = selectedcountry && Array.isArray(selectedcountry) && selectedcountry.length > 0 ? JSON.stringify(selectedcountry) : null;
+//     selectedstakeholders = selectedstakeholders && Array.isArray(selectedstakeholders) && selectedstakeholders.length > 0 ? JSON.stringify(selectedstakeholders) : null;
+
+//     let count = await knexConnect("paf_details")
+//         .count('* as count')
+//         .where('paf_unique', 'like', '%01');
+
+//     let finalcount = parseInt(count[0].count) + 1;
+//     let financialyear = getFinancialYear()
+
+//     let paf_unique = `VE/${finalcount}/${financialyear}/01`;
+
+//     let formattedDate = moment().format('YYYY-MM-DD HH:mm:ss');
+
+//     if (!(selectedcountry && selectedstakeholders && drug_name && drug_api && drug_innovator && compositions && master_type_id && client_name && brief_scope && sku && api_sources && import_license_rld && import_license_api)) {
+//         return res.send({
+//             status: false,
+//             message: "Please provide all details"
+//         })
+//     }
+
+//     try {
+
+//         let sendobj = {
+//             drug_name,
+//             drug_api,
+//             drug_innovator,
+//             compositions,
+//             master_type_id,
+//             client_name,
+//             brief_scope,
+//             sku,
+//             api_sources,
+//             import_license_rld,
+//             import_license_api,
+//             "driving_market": selectedcountry,
+//             "stakeholders": selectedstakeholders,
+//             paf_unique,
+//             paf_created_by,
+//             paf_created_at: formattedDate
+//         }
+
+//         const insertpaf = await pafInsert(sendobj);
+
+//         if (insertpaf) {
+
+//             return res.send({
+//                 status: true,
+//                 message: "PAF added successfully."
+//             })
+
+//         }
+//         else {
+
+//             return res.send({
+//                 status: false,
+//                 message: "Could not insert PAF"
+//             })
+
+//         }
+
+
+//     } catch (error) {
+
+//         return res.send({
+//             status: false,
+//             message: "Something went wrong",
+//             data: error.message
+//         })
+
+//     }
+
+// }
+
+
 const addPafNew = async (req, res) => {
     let {
         drug_name,
@@ -164,7 +277,8 @@ const addPafNew = async (req, res) => {
         import_license_rld,
         import_license_api,
         selectedcountry,
-        selectedstakeholders
+        selectedstakeholders,
+        include_form_headers
     } = req.body;
 
     let paf_created_by = req.user_name || "NA"
@@ -187,6 +301,8 @@ const addPafNew = async (req, res) => {
     api_sources = api_sources ? api_sources.trim() : null;
     import_license_rld = import_license_rld ? import_license_rld.trim() : null;
     import_license_api = import_license_api ? import_license_api.trim() : null;
+    include_form_headers = include_form_headers && Array.isArray(include_form_headers) && include_form_headers.length > 0 ? include_form_headers : null;
+
 
     selectedcountry = selectedcountry && Array.isArray(selectedcountry) && selectedcountry.length > 0 ? JSON.stringify(selectedcountry) : null;
     selectedstakeholders = selectedstakeholders && Array.isArray(selectedstakeholders) && selectedstakeholders.length > 0 ? JSON.stringify(selectedstakeholders) : null;
@@ -234,10 +350,66 @@ const addPafNew = async (req, res) => {
 
         if (insertpaf) {
 
-            return res.send({
-                status: true,
-                message: "PAF added successfully."
-            })
+            let formsdata = await getMasterFormforMasterId(master_type_id);
+
+            if (formsdata.length > 0) {
+                let finaldata = formsdata.map((row, index) => {
+
+                    let findpaf = include_form_headers.find((ee) => ee.master_header_id == row.master_header_id)
+
+                    return {
+                        pafform_type_id: row.master_type_id,
+                        pafform_header_id: row.master_header_id,
+                        pafform_item_id: row.master_item_id,
+                        pafform_subitem_id: row.master_subitem_id,
+                        pafform_item_name: row.master_item_name,
+                        header_status: findpaf.status_selected,
+                        pafform_target: findpaf.target_date_selected.trim() == "" ? null : findpaf.target_date_selected,
+                        header_timeline: findpaf.timeline_selected,
+                        pafform_team: findpaf.department,
+                        paf_id: insertpaf // Add your custom 'paf_id' here
+                    };
+                });
+
+                // let budgetdata = [];
+
+                // include_form_headers.map((ele) => {
+                //     budgetdata.push({
+                //         "paf_id": insertpaf,
+                //         "paf_unique": paf_unique,
+                //         "department_id": ele.department_id,
+                //         "department_name": ele.department
+                //     })
+                // })
+
+                // let insertbudget = await insertNewBudget(budgetdata)
+
+                const insertpafform = await insertNewPafForm(finaldata)
+
+                if (insertpafform) {
+
+                    let updatesttaus = await knexConnect("paf_details").update({ assign_departments: "Y" }).where("paf_id", insertpaf)
+
+                    return res.send({
+                        status: true,
+                        message: "PAF form created"
+                    })
+                }
+                else {
+                    return res.send({
+                        status: false,
+                        message: "PAF form created but could not add Forms"
+                    })
+                }
+
+            }
+            else{
+                return res.send({
+                    status: false,
+                    message: "PAF Created but forms nots found"
+                })
+        
+            }
 
         }
         else {
@@ -419,22 +591,23 @@ const approvePaf = async (req, res) => {
     let pafid = req.params.pafid;
     let user_name = req?.user_name;
 
+    let {status}=req.body
+
     let formattedDate = moment().format('YYYY-MM-DD HH:mm:ss');
 
     try {
-        const approvepaf = await approvePafCall(pafid, user_name, formattedDate);
+        const approvepaf = await approvePafCall(pafid, user_name, formattedDate,status);
 
         if (approvepaf) {
             return res.send({
                 status: true,
-                message: "PAF Approved"
+                message: "PAF Status Updated"
             })
         }
         else {
-
             return res.send({
                 status: false,
-                message: "Not approved"
+                message: "Status not updated"
             })
 
         }
@@ -599,7 +772,7 @@ const revisePAF = async (req, res) => {
 
 const createPAFForm = async (req, res) => {
 
-    let { include_form_headers, master_type_id, paf_id,paf_unique } = req.body;
+    let { include_form_headers, master_type_id, paf_id, paf_unique } = req.body;
 
     include_form_headers = include_form_headers && Array.isArray(include_form_headers) && include_form_headers.length > 0 ? include_form_headers : null;
 
@@ -626,24 +799,24 @@ const createPAFForm = async (req, res) => {
                 };
             });
 
-            let budgetdata=[];
+            let budgetdata = [];
 
-            include_form_headers.map((ele)=>{
+            include_form_headers.map((ele) => {
                 budgetdata.push({
-                    "paf_id":paf_id,
-                    "paf_unique":paf_unique,
-                    "department_id":ele.department_id,
-                    "department_name":ele.department
+                    "paf_id": paf_id,
+                    "paf_unique": paf_unique,
+                    "department_id": ele.department_id,
+                    "department_name": ele.department
                 })
             })
 
-            let insertbudget=await insertNewBudget(budgetdata)
+            let insertbudget = await insertNewBudget(budgetdata)
 
             const insertpafform = await insertNewPafForm(finaldata)
 
             if (insertpafform) {
 
-                let updatesttaus=await knexConnect("paf_details").update({assign_departments:"Y"}).where("paf_id",paf_id)
+                let updatesttaus = await knexConnect("paf_details").update({ assign_departments: "Y" }).where("paf_id", paf_id)
 
                 return res.send({
                     status: true,
