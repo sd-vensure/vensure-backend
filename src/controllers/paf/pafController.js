@@ -293,7 +293,7 @@ const addPafNew = async (req, res) => {
     drug_name = drug_name ? drug_name.trim() : null;
     drug_api = drug_api ? drug_api.trim() : null;
     drug_innovator = drug_innovator ? drug_innovator.trim() : null;
-    compositions = compositions ? compositions.trim() : null;
+    // compositions = compositions ? compositions.trim() : null;
     master_type_id = master_type_id ? master_type_id.trim() : null;
     client_name = client_name ? client_name.trim() : null;
     brief_scope = brief_scope ? brief_scope.trim() : null;
@@ -306,6 +306,7 @@ const addPafNew = async (req, res) => {
 
     selectedcountry = selectedcountry && Array.isArray(selectedcountry) && selectedcountry.length > 0 ? JSON.stringify(selectedcountry) : null;
     selectedstakeholders = selectedstakeholders && Array.isArray(selectedstakeholders) && selectedstakeholders.length > 0 ? JSON.stringify(selectedstakeholders) : null;
+    compositions = compositions && Array.isArray(compositions) && compositions.length > 0 ? JSON.stringify(compositions) : null;
 
     let count = await knexConnect("paf_details")
         .count('* as count')
@@ -388,7 +389,7 @@ const addPafNew = async (req, res) => {
 
                 if (insertpafform) {
 
-                    let updatesttaus = await knexConnect("paf_details").update({ assign_departments: "Y" }).where("paf_id", insertpaf)
+                    // let updatesttaus = await knexConnect("paf_details").update({ assign_departments: "Y" }).where("paf_id", insertpaf)
 
                     return res.send({
                         status: true,
@@ -816,7 +817,7 @@ const createPAFForm = async (req, res) => {
 
             if (insertpafform) {
 
-                let updatesttaus = await knexConnect("paf_details").update({ assign_departments: "Y" }).where("paf_id", paf_id)
+                // let updatesttaus = await knexConnect("paf_details").update({ assign_departments: "Y" }).where("paf_id", paf_id)
 
                 return res.send({
                     status: true,
