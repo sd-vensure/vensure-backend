@@ -6,6 +6,7 @@ const insertNewBudget = async (data) => {
         let response = await knexConnect("budget_paf").insert(data);
         return true;
     } catch (error) {
+        console.log(error)
         return false;
     }
 
