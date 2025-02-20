@@ -111,13 +111,18 @@ const loginUser = async (req, res) => {
             })
         }
 
-        let checkemail = await knexConnect("user")
-            .select()
-            .where(
-                {
-                    "user_email": email
-                }
-            )
+        // let checkemail = await knexConnect("user")
+        //     .select()
+        //     .where(
+        //         {
+        //             "user_email": email
+        //         }
+        //     )
+
+        let checkemail = await knexConnect('user')
+            .select('*') // Select all columns from the user table
+            .join('department', 'department.department_id', '=', 'user.department_id') // Perform the join
+            .where('user.user_email', email); // Filter by user_id
 
         if (checkemail.length == 0) {
             return res.send({
@@ -134,6 +139,11 @@ const loginUser = async (req, res) => {
         }
 
         let userdata = checkemail[0];
+        // let department_id = checkemail[0].department_id;
+
+        // let department_name = await knexConnect("department").select("*").where("department_id", department_id);
+
+        // userdata = { ...userdata, "department_name": department_name[0].department_name };
 
         let passwordcompare = await comparePassword(userdata.user_password, password);
 

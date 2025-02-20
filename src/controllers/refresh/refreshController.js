@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const { checkRefresh, deleteRefresh } = require('./refreshHelper');
 const { checkUser } = require('../user/userHElper');
 const { generateAccessToken } = require('../../helpers');
+const knexConnect = require('../../../knexConnection');
 
 const getToken = async (req, res) => {
     const cookies = req.cookies;
@@ -47,7 +48,7 @@ const getToken = async (req, res) => {
                             const accessToken = generateAccessToken(datatoencrypt);
 
                             console.log(check.data)
-                            let userdata=null
+                            let userdata = null
                             let rolesreturn = check.data.roles == "" ? [] : JSON.parse(check.data.roles)
 
                             userdata = { ...check.data, "roles": rolesreturn }

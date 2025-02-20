@@ -19,11 +19,13 @@ const isValidEmail = (email) => {
 
 
 const checkUser = async (user_id) => {
-   
+
     try {
         const resp = await knexConnect('user')
-            .select("*")
-            .where('user_id', user_id);
+            .select('*') // Select all columns from the user table
+            .join('department', 'department.department_id', '=', 'user.department_id') // Perform the join
+            .where('user.user_id', user_id); // Filter by user_id
+
 
         // console.log(resp)
 
@@ -56,4 +58,4 @@ const checkUser = async (user_id) => {
 
 }
 
-module.exports = { isIndianMobileNumber, isValidEmail,checkUser }
+module.exports = { isIndianMobileNumber, isValidEmail, checkUser }

@@ -31,7 +31,8 @@ const addBudgetEntries = async (req, res) => {
                 "pafform_header_id": ele.pafform_header_id,
                 "pafform_item_name": ele.pafform_item_name,
                 "budget_updated_by": req.user_name,
-                "budget_updated_at": moment().format('YYYY-MM-DD HH:mm:ss')
+                "budget_updated_at": moment().format('YYYY-MM-DD HH:mm:ss'),
+                "costhead":ele.costhead
             })
         })
 
