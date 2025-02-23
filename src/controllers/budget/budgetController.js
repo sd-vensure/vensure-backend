@@ -40,9 +40,9 @@ const addBudgetEntries = async (req, res) => {
 
         if (response) {
 
-            let updatebudgetstatus = await knexConnect("paf_details").update({
-                budget_recieve: "Y"
-            }).where({ paf_id: datatosend[0].paf_id });
+            // let updatebudgetstatus = await knexConnect("paf_details").update({
+            //     budget_recieve: "Y"
+            // }).where({ paf_id: datatosend[0].paf_id });
 
             return res.send({
                 status: true,
