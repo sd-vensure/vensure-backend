@@ -33,24 +33,23 @@ const getPAFFormforPafID = async (req, res) => {
 
     try {
 
-    let resp=await getPAFFrom(paf_id);
-    
-    if(resp && resp.length>0)
-    {
-        return res.send({
-            status: true,
-            message: "PAF form found",
-            data:resp
-        })
-    }
-    else{
-        return res.send({
-            status: false,
-            message: "Form not found"
-        })
+        let resp = await getPAFFrom(paf_id);
 
-    }
-        
+        if (resp && resp.length > 0) {
+            return res.send({
+                status: true,
+                message: "PAF form found",
+                data: resp
+            })
+        }
+        else {
+            return res.send({
+                status: false,
+                message: "Form not found"
+            })
+
+        }
+
 
     } catch (error) {
         return res.send({
@@ -62,51 +61,50 @@ const getPAFFormforPafID = async (req, res) => {
 
 
 const updateAssignDepartment = async (req, res) => {
-    
-    let data=req.body.data;
+
+    let data = req.body.data;
 
     const updates = data.reduce((acc, { pafform_id, pafform_team }) => {
         acc.pafform_team.push(`WHEN pafform_id = ${pafform_id} THEN '${pafform_team}'`);
         return acc;
-      }, { pafform_team: [] });
+    }, { pafform_team: [] });
 
     try {
 
-    let resp= await knexConnect('paf_forms')
-    .update({
-        pafform_team: knexConnect.raw(`CASE ${updates.pafform_team.join(' ')} ELSE pafform_team END`)
-    });
+        let resp = await knexConnect('paf_forms')
+            .update({
+                pafform_team: knexConnect.raw(`CASE ${updates.pafform_team.join(' ')} ELSE pafform_team END`)
+            });
 
-    let paf_data=await knexConnect("paf_forms").select("*").where("pafform_id",data[0].pafform_id);
+        let paf_data = await knexConnect("paf_forms").select("*").where("pafform_id", data[0].pafform_id);
 
-    let paf_id=paf_data[0].paf_id;
+        let paf_id = paf_data[0].paf_id;
 
-    console.log(paf_id)
-    console.log(req.user_name)
-    console.log(req.user_id)
-    console.log(req.user_email)
+        console.log(paf_id)
+        console.log(req.user_name)
+        console.log(req.user_id)
+        console.log(req.user_email)
 
-    let paf_update=await knexConnect("paf_details").update({
-        "assign_departments":"Y",
-        "department_assigned_by":req.user_name,
-        "department_assigned_at": moment().format('YYYY-MM-DD HH:mm:ss')
-    }).where("paf_id",paf_id);
-    
-    if(resp)
-    {
-        return res.send({
-            status: true,
-            message: "Update Success",
-        })
-    }
-    else{
-        return res.send({
-            status: false,
-            message: "Update Failed"
-        })
+        let paf_update = await knexConnect("paf_details").update({
+            "assign_departments": "Y",
+            "department_assigned_by": req.user_name,
+            "department_assigned_at": moment().format('YYYY-MM-DD HH:mm:ss')
+        }).where("paf_id", paf_id);
 
-    }
-        
+        if (resp) {
+            return res.send({
+                status: true,
+                message: "Update Success",
+            })
+        }
+        else {
+            return res.send({
+                status: false,
+                message: "Update Failed"
+            })
+
+        }
+
 
     } catch (error) {
         return res.send({
@@ -116,4 +114,37 @@ const updateAssignDepartment = async (req, res) => {
     }
 }
 
-module.exports = { getLastNumbers, getPAFFormforPafID,updateAssignDepartment }
+const updatePAFComplete = async (req, res) => {
+    let data = req.body.data;
+
+    try {
+
+        const updatePromises = data.map(record => {
+            return knexConnect('paf_forms')
+                .where({ pafform_id: record.pafform_id })
+                .update({
+                    pafform_team: record.pafform_team,
+                    pafform_start: record.pafform_start == "" || record.pafform_start == null ? null : record.pafform_start,
+                    pafform_end: record.pafform_end == "" || record.pafform_end == null ? null : record.pafform_end,
+                    pafform_remarks: record.pafform_remarks ? record.pafform_remarks.trim() : null
+                });
+        });
+
+        // Wait for all updates to finish
+        await Promise.all(updatePromises);
+
+        return res.send({
+            status: true,
+            message: "Form Updated"
+        })
+
+
+    } catch (error) {
+        return res.send({
+            status: false,
+            message: "Something went wrong"
+        })
+    }
+}
+
+module.exports = { getLastNumbers, getPAFFormforPafID, updateAssignDepartment, updatePAFComplete }
