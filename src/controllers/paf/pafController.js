@@ -368,6 +368,7 @@ const addPafNew = async (req, res) => {
                         pafform_target: findpaf.target_date_selected.trim() == "" ? null : findpaf.target_date_selected,
                         header_timeline: findpaf.timeline_selected,
                         pafform_team: findpaf.department,
+                        milestone: row.milestone,
                         paf_id: insertpaf // Add your custom 'paf_id' here
                     };
                 });
@@ -404,12 +405,12 @@ const addPafNew = async (req, res) => {
                 }
 
             }
-            else{
+            else {
                 return res.send({
                     status: false,
                     message: "PAF Created but forms nots found"
                 })
-        
+
             }
 
         }
@@ -592,12 +593,12 @@ const approvePaf = async (req, res) => {
     let pafid = req.params.pafid;
     let user_name = req?.user_name;
 
-    let {status}=req.body
+    let { status } = req.body
 
     let formattedDate = moment().format('YYYY-MM-DD HH:mm:ss');
 
     try {
-        const approvepaf = await approvePafCall(pafid, user_name, formattedDate,status);
+        const approvepaf = await approvePafCall(pafid, user_name, formattedDate, status);
 
         if (approvepaf) {
             return res.send({
