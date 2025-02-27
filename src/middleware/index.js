@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
-const knexConnect = require("../../knexConnection")
+const knexConnect = require("../../knexConnection");
+const { checkUser } = require("../controllers/user/userHElper");
 
 
 const authMiddlewareUser = async (req, res, next) => {
@@ -24,6 +25,13 @@ const authMiddlewareUser = async (req, res, next) => {
 
                     if (decoded) {
                         req.user_id = decoded.user_id;
+
+                        let dataresp = await checkUser(decoded.user_id);
+                        if (dataresp.status) {
+                            req.department_id = dataresp.data.department_id;
+                            req.department_name = dataresp.data.department_name;
+                        }
+
                         req.user_email = decoded.user_email;
                         req.user_name = decoded.user_name;
                         next();
