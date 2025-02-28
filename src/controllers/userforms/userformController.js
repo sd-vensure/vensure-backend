@@ -9,17 +9,27 @@ const addForm = async (req, res) => {
     let formattedDate = moment().format('YYYY-MM-DD HH:mm:ss');
 
     let data = req.body.data;
+    let financialyear = req.body.finance;
     let uniqueid = generateAlphanumericString()
 
     try {
+
+        let checkformpresent = await knexConnect("user_form_track").select("*").where("financial_year", financialyear).andWhere("user_id", req.user_id);
+
+        if(checkformpresent.length>0)
+        {
+            return  res.send({
+                status: false,
+                message: "Form already submitted for the financial year.",
+            })
+        }
 
         let datatopush = data.map((item) => {
             return {
                 "form_id": uniqueid,
                 "type": item.type,
-                "date": item.date,
-                "remarks": item.remarks
-
+                "quarter": item.quarter,
+                "activity": item.activity
             }
         })
 
@@ -29,7 +39,8 @@ const addForm = async (req, res) => {
             "department_id": req.department_id,
             "user_id": req.user_id,
             "created_by": req.user_name,
-            "created_at": formattedDate
+            "created_at": formattedDate,
+            "financial_year": financialyear
         })
 
         return res.send({
@@ -246,6 +257,41 @@ const sendForVerification = async (req, res) => {
 }
 
 
+const sendDepartmentFinancialYear = async (req, res) => {
+
+    let finance = req.body.finance;
+    let department_id = req.department_id;
+
+    try {
+
+        let data = await knexConnect("user_form_track")
+            .update(
+                {
+                    "is_shared": "Y"
+                }
+            )
+            .where("financial_year", finance)
+            .andWhere("department_id", department_id);
+
+
+        return res.send({
+            status: true,
+            message: "Forms Shared."
+        })
+
+    } catch (error) {
+
+        return res.send({
+            status: false,
+            message: "Error Occured",
+            data: error.message
+        })
+
+    }
+
+}
+
+
 const approveReject = async (req, res) => {
 
     let uniqueid = req.params.uniqueid;
@@ -292,8 +338,8 @@ const updateFormData = async (req, res) => {
             return {
                 "form_id": uniqueid,
                 "type": item.type,
-                "date": item.date,
-                "remarks": item.remarks
+                "quarter": item.quarter,
+                "activity": item.activity
             }
         })
 
@@ -372,5 +418,111 @@ const getInProgressForms = async (req, res) => {
 }
 
 
+const getSubmittedForms = async (req, res) => {
 
-module.exports = { addForm, viewMyForms, getParticularForm, getFormsDepartment, sendForVerification, getInProgressForms, approveReject,updateFormData }
+    try {
+
+        let data = await knexConnect("user_form_track")
+            .select(
+                "user_form_track.*",
+                "user.*",
+                "department.*"
+            )
+            .join("user", "user_form_track.user_id", "user.user_id")
+            .join("department", "department.department_id", "user_form_track.department_id")
+            .where("user_form_track.is_shared", "Y");
+
+
+        if (data && data.length > 0) {
+            return res.send({
+                status: true,
+                message: "Form found Successfully",
+                data: data
+            })
+        }
+        else if (data.length == 0) {
+            return res.send({
+                status: false,
+                message: "No Form Found"
+            })
+        }
+        else {
+            return res.send({
+                status: false,
+                message: "Something went wrong"
+            })
+        }
+
+
+    } catch (error) {
+
+        return res.send({
+            status: false,
+            message: "Error Occured",
+            data: error.message
+        })
+
+    }
+
+}
+
+const getTotalFormsTotalUsers = async (req, res) => {
+
+    let financial_year = req.body.financial_year || null;
+    let department_name = req.department_name;
+    let department_id = req.department_id;
+
+    try {
+
+        let data = await knexConnect("user").count("* as total").where("department_id", department_id);
+        let count = await knexConnect("user_form_track").count("* as total").where("department_id", department_id).andWhere("financial_year", financial_year);
+        let singleentry = await knexConnect("user_form_track").count("* as total").where("department_id", department_id).andWhere("financial_year", financial_year).andWhere("is_shared", "N")
+
+
+        let entries_data = await knexConnect("user_form_track")
+            .select(
+                "user_form_track.*",
+                "user.*",
+                "department.*"
+            )
+            .join("user", "user_form_track.user_id", "user.user_id")
+            .join("department", "department.department_id", "user_form_track.department_id")
+            // .where("user_form_track.is_verified", "In Progress")
+            .where("user_form_track.financial_year", financial_year)
+
+        if (entries_data.length > 0) {
+            return res.send({
+                status: true,
+                message: "Data Found",
+                total_persons: data[0].total,
+                total_forms_filled: count[0].total,
+                not_shared_forms: singleentry[0].total,
+                entries: entries_data
+            })
+        }
+        else {
+            return res.send({
+                status: false,
+                message: "No forms found",
+                total_persons: data[0].total,
+                total_forms_filled: count[0].total,
+                not_shared_forms: singleentry[0].total,
+                entries: entries_data
+            })
+        }
+
+    } catch (error) {
+
+        return res.send({
+            status: false,
+            message: "Error Occured",
+            data: error.message
+        })
+
+    }
+
+}
+
+
+
+module.exports = {getSubmittedForms,sendDepartmentFinancialYear, getTotalFormsTotalUsers, addForm, viewMyForms, getParticularForm, getFormsDepartment, sendForVerification, getInProgressForms, approveReject, updateFormData }
