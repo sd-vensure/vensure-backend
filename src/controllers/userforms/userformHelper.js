@@ -1,8 +1,6 @@
 
 
-const generateAlphanumericString = () => {
-
-    let length = 10;
+const generateAlphanumericString = (length) => {
 
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';

@@ -10,15 +10,14 @@ const addForm = async (req, res) => {
 
     let data = req.body.data;
     let financialyear = req.body.finance;
-    let uniqueid = generateAlphanumericString()
+    let uniqueid = generateAlphanumericString(15)
 
     try {
 
         let checkformpresent = await knexConnect("user_form_track").select("*").where("financial_year", financialyear).andWhere("user_id", req.user_id);
 
-        if(checkformpresent.length>0)
-        {
-            return  res.send({
+        if (checkformpresent.length > 0) {
+            return res.send({
                 status: false,
                 message: "Form already submitted for the financial year.",
             })
@@ -62,6 +61,86 @@ const addForm = async (req, res) => {
 }
 
 
+const addNewForm = async (req, res) => {
+
+    let formattedDate = moment().format('YYYY-MM-DD HH:mm:ss');
+
+    let data = req.body.data;
+    let financialyear = req.body.finance;
+    let uniqueformid = generateAlphanumericString(10)
+
+    try {
+
+        let datatopush = [];
+
+        data.map((ele, index) => {
+            let createobj = {};
+            let category_id = ele.id;
+            let category_name = ele.name;
+            let form_id = uniqueformid;
+
+            createobj = { ...createobj, category_id, category_name, form_id };
+
+            ele.kras && ele.kras.length > 0 &&
+                ele.kras.map((ele1, index1) => {
+                    let kra_id = generateAlphanumericString(10)
+                    let kra_text = ele1.text;
+                    createobj = { ...createobj, kra_id, kra_text, "kpi_id": null, "kpi_text": null, "kpi_target": null, "kpi_quarter": null, "kpi_weightage": null };
+                    datatopush.push(createobj)
+
+                    ele1.kpis && ele1.kpis.length>0 && ele1.kpis.map((ele2,index2)=>{
+                        createobj= {...createobj,
+                            kpi_id:generateAlphanumericString(15),
+                            kpi_text:ele2.name,
+                            kpi_target:ele2.date,
+                            kpi_quarter:ele2.quarter,
+                            kpi_weightage:ele2.number
+                        }
+                        datatopush.push(createobj)
+                    })
+
+
+
+                })
+
+        
+
+            // datatopush.push(createobj)
+
+        })
+
+        let insertformdata= await knexConnect("user_form_new").insert(datatopush);
+        let datafortrack={
+            "form_id":uniqueformid,
+            "department_id":req.department_id,
+            "user_id":req.user_id,
+            "created_by":req.user_name,
+            "created_at":formattedDate,
+            "financial_year": financialyear
+        }
+
+        let insertformdatatrack= await knexConnect("user_form_track_new").insert(datafortrack);
+       
+
+        return res.send({
+            status: true,
+            message: "Form Added Successfully",
+            data: datatopush
+        })
+
+    } catch (error) {
+
+        return res.send({
+            status: false,
+            message: "Error Occured",
+            data: error.message
+        })
+
+    }
+
+}
+
+
 const viewMyForms = async (req, res) => {
 
     let user_id = req.params.userid;
@@ -82,6 +161,58 @@ const viewMyForms = async (req, res) => {
             .where("user_form_track.user_id", user_id);
 
 
+
+        if (data && data.length > 0) {
+            return res.send({
+                status: true,
+                message: "Form found Successfully",
+                data: data
+            })
+        }
+        else if (data.length == 0) {
+            return res.send({
+                status: false,
+                message: "No Form Found"
+            })
+        }
+        else {
+            return res.send({
+                status: false,
+                message: "Something went wrong"
+            })
+        }
+
+
+    } catch (error) {
+
+        return res.send({
+            status: false,
+            message: "Error Occured",
+            data: error.message
+        })
+
+    }
+
+}
+
+const viewMyFormsNew = async (req, res) => {
+
+    let user_id = req.params.userid;
+
+    try {
+
+        // let data=await knexConnect("user_form_track").select("*").where("user_id",user_id);
+
+
+        let data = await knexConnect("user_form_track_new")
+            .select(
+                "user_form_track_new.*",
+                "user.*",
+                "department.*"
+            )
+            .join("user", "user_form_track_new.user_id", "user.user_id")
+            .join("department", "department.department_id", "user_form_track_new.department_id")
+            .where("user_form_track_new.user_id", user_id);
 
         if (data && data.length > 0) {
             return res.send({
@@ -189,6 +320,56 @@ const getParticularForm = async (req, res) => {
             .where("user_form_track.form_id", uniqueid);
 
 
+
+        if (data && data.length > 0) {
+            return res.send({
+                status: true,
+                message: "Form found Successfully",
+                data: data
+            })
+        }
+        else if (data.length == 0) {
+            return res.send({
+                status: false,
+                message: "No Form Found"
+            })
+        }
+        else {
+            return res.send({
+                status: false,
+                message: "Something went wrong"
+            })
+        }
+
+
+    } catch (error) {
+
+        return res.send({
+            status: false,
+            message: "Error Occured",
+            data: error.message
+        })
+
+    }
+
+}
+
+
+const getParticularFormNew = async (req, res) => {
+
+    let uniqueid = req.params.uniqueid;
+
+    try {
+
+        let data = await knexConnect("user_form_track_new")
+            .select(
+                "user_form_track_new.*",
+                "user_form_new.*",
+                "user.*",
+            )
+            .join("user", "user_form_track_new.user_id", "user.user_id")
+            .join("user_form_new", "user_form_new.form_id", "user_form_track_new.form_id")
+            .where("user_form_track_new.form_id", uniqueid);
 
         if (data && data.length > 0) {
             return res.send({
@@ -368,6 +549,79 @@ const updateFormData = async (req, res) => {
 }
 
 
+
+const updateFormDataNew = async (req, res) => {
+
+    let uniqueid = req.params.uniqueid;
+    let data = req.body.data;
+
+    let formattedDate = moment().format('YYYY-MM-DD HH:mm:ss');
+
+    try {
+        
+        let removeentries = await knexConnect("user_form_new").where("form_id", uniqueid).del();
+        
+        let datatopush = [];
+
+        data.map((ele, index) => {
+            let createobj = {};
+            let category_id = ele.category_id;
+            let category_name = ele.category_name;
+            let form_id = uniqueid;
+
+            createobj = { ...createobj, category_id, category_name, form_id };
+
+            ele.kras && ele.kras.length > 0 &&
+                ele.kras.map((ele1, index1) => {
+                    let kra_id = generateAlphanumericString(10)
+                    let kra_text = ele1.text;
+                    createobj = { ...createobj, kra_id, kra_text, "kpi_id": null, "kpi_text": null, "kpi_target": null, "kpi_quarter": null, "kpi_weightage": null };
+                    datatopush.push(createobj)
+
+                    ele1.kpis && ele1.kpis.length>0 && ele1.kpis.map((ele2,index2)=>{
+                        createobj= {...createobj,
+                            kpi_id:generateAlphanumericString(15),
+                            kpi_text:ele2.name,
+                            kpi_target:ele2.target,
+                            kpi_quarter:ele2.quarter,
+                            kpi_weightage:ele2.number,
+                            kpi_complete:ele2.completion,
+                            kpi_obtained:ele2.obtained
+                        }
+                        datatopush.push(createobj)
+                    })
+
+                })
+
+        })
+
+        let insertformdata = await knexConnect("user_form_new").insert(datatopush);
+
+
+        let updatetrackform = await knexConnect("user_form_track_new").update({
+            "updated_by": req.user_id,
+            "updated_at": formattedDate
+        }).where("form_id", uniqueid);
+
+        return res.send({
+            status: true,
+            message: "Status Updated",
+            data:datatopush
+        })
+
+    } catch (error) {
+
+        return res.send({
+            status: false,
+            message: "Error Occured",
+            data: error.message
+        })
+
+    }
+
+}
+
+
 const getInProgressForms = async (req, res) => {
 
     try {
@@ -525,4 +779,4 @@ const getTotalFormsTotalUsers = async (req, res) => {
 
 
 
-module.exports = {getSubmittedForms,sendDepartmentFinancialYear, getTotalFormsTotalUsers, addForm, viewMyForms, getParticularForm, getFormsDepartment, sendForVerification, getInProgressForms, approveReject, updateFormData }
+module.exports = {updateFormDataNew, addNewForm,viewMyFormsNew, getSubmittedForms, sendDepartmentFinancialYear, getTotalFormsTotalUsers, addForm, viewMyForms, getParticularForm,getParticularFormNew, getFormsDepartment, sendForVerification, getInProgressForms, approveReject, updateFormData }
