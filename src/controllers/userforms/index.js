@@ -1,6 +1,6 @@
 const express = require("express");
 const { authMiddlewareUser } = require("../../middleware");
-const {viewMyFormsNew, addForm, viewMyForms, getParticularForm,getParticularFormNew, getFormsDepartment, sendForVerification, getInProgressForms, approveReject, updateFormData, getTotalFormsTotalUsers, sendDepartmentFinancialYear, getSubmittedForms, addNewForm, updateFormDataNew } = require("./userformController");
+const {viewMyFormsNew, addForm, viewMyForms, getParticularForm,getParticularFormNew, getFormsDepartment, sendForVerification, getInProgressForms, approveReject, updateFormData, getTotalFormsTotalUsers, sendDepartmentFinancialYear, getSubmittedForms, addNewForm, updateFormDataNew, getFormsDepartmentNew, getTotalFormsTotalUsersNew, sendToDepartmentHead, approveRejectNew, updateFormDateAndMarks } = require("./userformController");
 const router = express.Router();
 
 router.post("/add",authMiddlewareUser,addForm);
@@ -13,15 +13,28 @@ router.get("/getparticularform/:uniqueid",authMiddlewareUser,getParticularForm);
 router.get("/getparticularformnew/:uniqueid",authMiddlewareUser,getParticularFormNew);
 
 router.get("/getformdepartment/:departmentid",authMiddlewareUser,getFormsDepartment);
+router.get("/getformdepartmentnew/:departmentid",authMiddlewareUser,getFormsDepartmentNew);
+
+router.get("/sendtodepartmenthead/:uniqueid",authMiddlewareUser,sendToDepartmentHead);
+
 router.get("/sendforverification/:uniqueid",authMiddlewareUser,sendForVerification);
+
 router.post("/senddepartmentfinancialyear",authMiddlewareUser,sendDepartmentFinancialYear);
+
 router.get("/approvedecline/:uniqueid/:val",authMiddlewareUser,approveReject);
+router.get("/approvedeclinenew/:uniqueid/:val",authMiddlewareUser,approveRejectNew);
+
 router.get("/getinprogressforms",authMiddlewareUser,getInProgressForms);
 router.get("/getsubmittedforms",authMiddlewareUser,getSubmittedForms);
+
 router.post("/totalformstotalusers",authMiddlewareUser,getTotalFormsTotalUsers);
+router.post("/totalformstotalusersnew",authMiddlewareUser,getTotalFormsTotalUsersNew);
 
 router.put("/update/:uniqueid",authMiddlewareUser,updateFormData);
 router.put("/updatenew/:uniqueid",authMiddlewareUser,updateFormDataNew);
+
+router.put("/updatedateandmarks",authMiddlewareUser,updateFormDateAndMarks);
+
 
 
 module.exports = router
