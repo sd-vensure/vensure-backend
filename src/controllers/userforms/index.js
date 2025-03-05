@@ -1,6 +1,6 @@
 const express = require("express");
 const { authMiddlewareUser } = require("../../middleware");
-const {viewMyFormsNew, addForm, viewMyForms, getParticularForm,getParticularFormNew, getFormsDepartment, sendForVerification, getInProgressForms, approveReject, updateFormData, getTotalFormsTotalUsers, sendDepartmentFinancialYear, getSubmittedForms, addNewForm, updateFormDataNew, getFormsDepartmentNew, getTotalFormsTotalUsersNew, sendToDepartmentHead, approveRejectNew, updateFormDateAndMarks } = require("./userformController");
+const {getPendingFormsForMarks,viewMyFormsNew, addForm, viewMyForms, getParticularForm,getParticularFormNew, getFormsDepartment, sendForVerification, getInProgressForms, approveReject, updateFormData, getTotalFormsTotalUsers, sendDepartmentFinancialYear, getSubmittedForms, addNewForm, updateFormDataNew, getFormsDepartmentNew, getTotalFormsTotalUsersNew, sendToDepartmentHead, approveRejectNew, updateFormDateAndMarks, getSubmittedFormsNew, editRequestForm, acceptEditRequest } = require("./userformController");
 const router = express.Router();
 
 router.post("/add",authMiddlewareUser,addForm);
@@ -25,15 +25,25 @@ router.get("/approvedecline/:uniqueid/:val",authMiddlewareUser,approveReject);
 router.get("/approvedeclinenew/:uniqueid/:val",authMiddlewareUser,approveRejectNew);
 
 router.get("/getinprogressforms",authMiddlewareUser,getInProgressForms);
+
 router.get("/getsubmittedforms",authMiddlewareUser,getSubmittedForms);
+router.get("/getsubmittedformsnew",authMiddlewareUser,getSubmittedFormsNew);
 
 router.post("/totalformstotalusers",authMiddlewareUser,getTotalFormsTotalUsers);
 router.post("/totalformstotalusersnew",authMiddlewareUser,getTotalFormsTotalUsersNew);
+
+
+router.post("/getpendingmarksassign",authMiddlewareUser,getPendingFormsForMarks);
+
 
 router.put("/update/:uniqueid",authMiddlewareUser,updateFormData);
 router.put("/updatenew/:uniqueid",authMiddlewareUser,updateFormDataNew);
 
 router.put("/updatedateandmarks",authMiddlewareUser,updateFormDateAndMarks);
+
+
+router.post("/editrequest",authMiddlewareUser,editRequestForm)
+router.post("/acceptrejectrequest",acceptEditRequest)
 
 
 

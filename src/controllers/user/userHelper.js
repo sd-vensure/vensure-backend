@@ -21,13 +21,10 @@ const isValidEmail = (email) => {
 const checkUser = async (user_id) => {
 
     try {
-        const resp = await knexConnect('user')
+        let resp = await knexConnect('user')
             .select('*') // Select all columns from the user table
             .join('department', 'department.department_id', '=', 'user.department_id') // Perform the join
             .where('user.user_id', user_id); // Filter by user_id
-
-
-        // console.log(resp)
 
         if (resp === undefined) {
 
@@ -39,9 +36,30 @@ const checkUser = async (user_id) => {
 
         }
         else {
+
+            let fetchdesignatedperson= await knexConnect('emp_reporting_mapper')
+            .select('user.*', 'emp_reporting_mapper.*')
+            .join('user', 'user.user_id', 'emp_reporting_mapper.reporting_id')
+            .where('emp_reporting_mapper.emp_id', user_id);
+
+            let designated_data=null
+
+            if(fetchdesignatedperson && Array.isArray(fetchdesignatedperson) && fetchdesignatedperson.length>0)
+            {
+                designated_data={
+                    "designated_designation":fetchdesignatedperson[0].designation,
+                    "designated_department_id":fetchdesignatedperson[0].department_id,
+                    "designated_user_first_name":fetchdesignatedperson[0].user_first_name,
+                    "designated_user_contact":fetchdesignatedperson[0].user_contact,
+                    "designated_user_id":fetchdesignatedperson[0].user_id
+                }
+            }
+
+            let datatopass={...resp[0],designated_data};
+
             return {
                 status: true,
-                data: resp[0],
+                data: datatopass,
                 message: "Data Found"
             }
         }

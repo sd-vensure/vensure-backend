@@ -7,7 +7,7 @@ const { saveRefresh, checkRefresh, deleteRefresh } = require("../refresh/refresh
 
 const registerUser = async (req, res) => {
     let {
-        user_first_name, user_last_name, user_email, user_contact, user_password
+        user_first_name, user_last_name, user_email, user_contact, user_password, department_id, emp_id, designation, doj
     } = req.body;
 
     // console.log(req.body)
@@ -16,64 +16,50 @@ const registerUser = async (req, res) => {
 
     user_first_name = user_first_name.trim()
     user_last_name = user_last_name ? user_last_name.trim() : null
-    user_email = user_email = user_email ? user_email.trim() : null
+    user_email = user_email ? user_email.trim() : null
+    designation = designation ? designation.trim() : null
+
+    department_id = (department_id=="" || department_id==null) ? null:parseInt(department_id) ;
+    doj = (doj=="" || doj==null) ? null : doj
 
     user_contact = user_contact ? user_contact.trim() : null
 
-    if (!isIndianMobileNumber(user_contact)) {
-        return res.send({
-            status: false,
-            message: "Please send a proper Indian Number"
-        })
-    }
+    // if (!isIndianMobileNumber(user_contact)) {
+    //     return res.send({
+    //         status: false,
+    //         message: "Please send a proper Indian Number"
+    //     })
+    // }
 
-    if (!isValidEmail(user_email)) {
-        return res.send({
-            status: false,
-            message: "Please provide a valid email"
-        })
-    }
+    // if (!isValidEmail(user_email)) {
+    //     return res.send({
+    //         status: false,
+    //         message: "Please provide a valid email"
+    //     })
+    // }
 
     try {
 
-        let checkemailexist = await knexConnect("user")
+        let checkempidexist = await knexConnect("user")
             .select()
             .where({
-                user_email
+                emp_id
             });
 
-        if (checkemailexist.length > 0) {
+        if (checkempidexist.length > 0) {
             return res.send({
                 status: false,
-                message: "Email ID already exists"
+                message: "Employee ID already exists"
             })
         }
 
         let insertdata = await knexConnect("user")
             .insert({
                 user_first_name, user_last_name, user_email, user_contact, "user_password": hashedpassword,
+                department_id, emp_id, designation, doj,
                 user_created_at: knexConnect.raw('UTC_TIMESTAMP()'),
                 user_updated_at: knexConnect.raw('UTC_TIMESTAMP()'),
             });
-
-
-        // let customer_id = insertdata[0];
-
-        // let newdate = new Date();
-        // const datetime = date.format(newdate, 'YYYY-MM-DD HH:mm:ss');
-
-        // let uniquestring = generateUniqueString(10)
-
-
-        // let insertuniquestring = await knexConnect("customer_verification")
-        //     .insert({
-        //         "customer_id": customer_id,
-        //         "token": uniquestring,
-        //         "cv_created_at": datetime
-        //     })
-
-        // let final_link = process.env.WEBSITE_URL + "/verification/register?tk=" + uniquestring;
-        // await emailRegistrationUser(customer_email, customer_first_name, final_link)
 
         return res.send({
             status: true,
@@ -96,15 +82,15 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
 
     let {
-        email, password
+        id, password
     } = req.body;
 
-    email = email ? email.trim() : null
+    id = id ? (id.trim()).toUpperCase() : null
     password = password ? password.trim() : null
 
     try {
 
-        if (!(email && password)) {
+        if (!(id && password)) {
             return res.send({
                 status: false,
                 message: "Please provide email and password"
@@ -122,7 +108,7 @@ const loginUser = async (req, res) => {
         let checkemail = await knexConnect('user')
             .select('*') // Select all columns from the user table
             .join('department', 'department.department_id', '=', 'user.department_id') // Perform the join
-            .where('user.user_email', email); // Filter by user_id
+            .where('user.emp_id', id); // Filter by user_id
 
         if (checkemail.length == 0) {
             return res.send({
@@ -161,10 +147,29 @@ const loginUser = async (req, res) => {
             delete userdata.user_token_login;
             delete userdata.user_password;
 
-            let rolesreturn = userdata.roles == "" ? [] : JSON.parse(userdata.roles)
+            let rolesreturn = (userdata.roles == "" || userdata.roles==null) ? [] : JSON.parse(userdata.roles)
 
             userdata = { ...userdata, "roles": rolesreturn }
 
+            //Fetch Designated Person Name and ID
+
+            let fetchdesignatedperson= await knexConnect('emp_reporting_mapper')
+            .select('user.*', 'emp_reporting_mapper.*')
+            .join('user', 'user.user_id', 'emp_reporting_mapper.reporting_id')
+            .where('emp_reporting_mapper.emp_id', userdata.user_id);
+
+            let departmenthead=null
+
+            if(fetchdesignatedperson && Array.isArray(fetchdesignatedperson) && fetchdesignatedperson.length>0)
+            {
+                departmenthead={
+                    "designation":fetchdesignatedperson[0].designation,
+                    "department_id":fetchdesignatedperson[0].department_id,
+                    "user_first_name":fetchdesignatedperson[0].user_first_name,
+                    "user_contact":fetchdesignatedperson[0].user_contact,
+                    "user_id":fetchdesignatedperson[0].user_id,
+                }
+            }
 
             const refreshTokenExpire = process.env.COOKIE_EXPIRE_TIME_HOURS;
             const refreshToken = generateRefreshToken(encryptdata);
@@ -177,11 +182,10 @@ const loginUser = async (req, res) => {
             res.cookie('refreshJwt', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: process.env.COOKIE_EXPIRE_TIME_HOURS * 60 * 60 * 1000 });
 
 
-
             return res.send({
                 status: true,
                 message: "Login Successfull",
-                data: userdata,
+                data: {...userdata,departmenthead},
                 token: accessToken
             })
 

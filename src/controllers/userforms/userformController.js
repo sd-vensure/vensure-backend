@@ -71,6 +71,15 @@ const addNewForm = async (req, res) => {
 
     try {
 
+        let checkformpresent = await knexConnect("user_form_track").select("*").where("financial_year", financialyear).andWhere("user_id", req.user_id);
+
+        if (checkformpresent.length > 0) {
+            return res.send({
+                status: false,
+                message: "Form already submitted for the financial year.",
+            })
+        }
+
         let datatopush = [];
 
         data.map((ele, index) => {
@@ -110,9 +119,11 @@ const addNewForm = async (req, res) => {
         })
 
         let insertformdata = await knexConnect("user_form_new").insert(datatopush);
+
         let datafortrack = {
             "form_id": uniqueformid,
             "department_id": req.department_id,
+            "designated_id": req.designated_user_id,
             "user_id": req.user_id,
             "created_by": req.user_name,
             "created_at": formattedDate,
@@ -465,18 +476,18 @@ const sendForVerification = async (req, res) => {
 
     try {
 
-        let data = await knexConnect("user_form_track")
+        let data = await knexConnect("user_form_track_new")
             .update(
                 {
-                    "is_shared": "Y",
-                    "is_verified": "In Progress"
+                    "is_shared": "Y"
                 }
             )
             .where("form_id", uniqueid);
 
         return res.send({
             status: true,
-            message: "Sent for Approval"
+            message: "Sent for Approval",
+            test:"tyeuhda"
         })
 
     } catch (error) {
@@ -840,6 +851,63 @@ const getSubmittedForms = async (req, res) => {
 
 }
 
+
+const getSubmittedFormsNew = async (req, res) => {
+
+    try {
+
+        let data = await knexConnect("user_form_track_new")
+            .select(
+                "user_form_track_new.*",
+                "user.*",
+                "department.*",
+                "designated_user.user_first_name as designated_user_name",
+                "designated_user.user_id as designated_user_id",
+                "designated_user.emp_id as designated_emp_id",
+                "designated_user.designation as designated_designation"
+            )
+            .join("user", "user_form_track_new.user_id", "user.user_id")
+            .join("department", "department.department_id", "user_form_track_new.department_id")
+            .leftJoin("emp_reporting_mapper", "emp_reporting_mapper.emp_id", "user.user_id") // Get the designated_id
+            .leftJoin("user as designated_user", "designated_user.user_id", "emp_reporting_mapper.reporting_id") // Fetch the designated user's name
+            .where("user_form_track_new.is_shared", "Y");
+
+        // console.log(data, "this is new data")
+
+
+        if (data && data.length > 0) {
+            return res.send({
+                status: true,
+                message: "Form found Successfully",
+                data: data
+            })
+        }
+        else if (data.length == 0) {
+            return res.send({
+                status: false,
+                message: "No Form Found"
+            })
+        }
+        else {
+            return res.send({
+                status: false,
+                message: "Something went wrong"
+            })
+        }
+
+
+    } catch (error) {
+
+        return res.send({
+            status: false,
+            message: "Error Occured",
+            data: error.message
+        })
+
+    }
+
+}
+
 const getTotalFormsTotalUsers = async (req, res) => {
 
     let financial_year = req.body.financial_year || null;
@@ -903,12 +971,13 @@ const getTotalFormsTotalUsersNew = async (req, res) => {
     let financial_year = req.body.financial_year || null;
     let department_name = req.department_name;
     let department_id = req.department_id;
+    let user_id = req.user_id;
 
     try {
 
         let data = await knexConnect("user").count("* as total").where("department_id", department_id);
         let count = await knexConnect("user_form_track_new").count("* as total").where("department_id", department_id).andWhere("financial_year", financial_year);
-        let singleentry = await knexConnect("user_form_track_new").count("* as total").where("department_id", department_id).andWhere("financial_year", financial_year).andWhere("is_shared", "N")
+        let singleentry = await knexConnect("user_form_track_new").count("* as total").where("designated_id", user_id).andWhere("financial_year", financial_year).andWhere("is_shared", "N")
 
 
         let entries_data = await knexConnect("user_form_track_new")
@@ -1014,5 +1083,173 @@ const updateFormDateAndMarks = async (req, res) => {
 }
 
 
+const getPendingFormsForMarks = async (req, res) => {
 
-module.exports = { updateFormDateAndMarks, approveRejectNew, getTotalFormsTotalUsersNew, sendToDepartmentHead, updateFormDataNew, getFormsDepartmentNew, addNewForm, viewMyFormsNew, getSubmittedForms, sendDepartmentFinancialYear, getTotalFormsTotalUsers, addForm, viewMyForms, getParticularForm, getParticularFormNew, getFormsDepartment, sendForVerification, getInProgressForms, approveReject, updateFormData }
+    let user_id = req.user_id;
+    // let user_id = 10;
+    let financial = req.body.financial;
+
+    try {
+
+        // let data=await knexConnect("user_form_track_new")
+        // .select("user_form_track_new.*","user_form_new.*")
+        // .join("user_form_new","user_form_new.","user_form_track_new.designated_id")
+
+        // let data = await knexConnect("user_form_track_new")
+        //     .distinct("user_form_track_new.*", "user_form_new.form_id") // Select form_id and all user_form_new columns
+        //     .join("user_form_new", "user_form_new.form_id", "user_form_track_new.form_id") // Join on form_id
+        //     .where("user_form_track_new.designated_id", user_id) // Filter by designated_id
+        //     .whereNotNull("user_form_new.kpi_id") // kpi_id != null
+        //     .whereNotNull("user_form_new.kpi_target") // kpi_target != null
+        //     .whereNull("user_form_new.kpi_obtained"); // kpi_obtained = null
+
+
+        // let data = await knexConnect("user_form_track_new")
+        //     .select("user_form_track_new.*") // Select all columns from user_form_track_new
+        //     .join("user_form_new", "user_form_new.form_id", "user_form_track_new.form_id") // Join on form_id
+        //     .where("user_form_track_new.designated_id", user_id) // Filter by designated_id
+        //     .whereNotNull("user_form_new.kpi_id") // kpi_id != null
+        //     .whereNotNull("user_form_new.kpi_target") // kpi_target != null
+        //     .whereNull("user_form_new.kpi_obtained") // kpi_obtained = null
+        //     .groupBy("user_form_track_new.form_id"); // Ensures distinct form_id while keeping all data
+
+        let data = await knexConnect("user_form_track_new")
+            .select("user_form_track_new.*", "user.user_first_name","user.emp_id","user.designation","department.department_name as department_user") // Select all from user_form_track_new and user
+            .join("user_form_new", "user_form_new.form_id", "user_form_track_new.form_id") // Join with user_form_new on form_id
+            .join("user", "user_form_track_new.user_id", "user.user_id") // Join with user table on user_id
+            .join("department", "department.department_id", "user.department_id") // Join with user table on user_id
+            .where("user_form_track_new.designated_id", user_id) // Filter by designated_id
+            .andWhere("user_form_track_new.financial_year", financial) // Filter by designated_id
+            // .whereNotNull("user_form_new.kpi_id") // kpi_id != null
+            // .whereNull("user_form_new.kpi_complete") // kpi_target != null
+            // .whereNull("user_form_new.kpi_obtained") // kpi_obtained = null
+            .where((qb) => {
+                qb.whereNotNull("user_form_new.kpi_id")
+                  .whereNotNull("user_form_new.kpi_complete")
+                  .whereNull("user_form_new.kpi_obtained");
+            })
+            
+            .groupBy("user_form_track_new.form_id"); // Ensure distinct form_id while keeping user data
+
+        if(data.length>0)
+        {
+            return res.send({
+                status: true,
+                data: data,
+                message:"Data Found"
+            })
+        }
+        else{
+            return res.send({
+                status: false,
+                data: [],
+                message:"No Form Found"
+            })
+        }
+
+    } catch (error) {
+        return res.send({
+            status: false,
+            message: "Error Occured",
+            data: error.message
+        })
+    }
+
+
+}
+
+
+const editRequestForm=async(req,res)=>{
+    let data=req.body.data;
+    let user_id=req.user_id;
+    let user_name=req.user_name;
+    let emp_id=req.emp_id;
+
+    try {
+
+        let formattedDate = moment().format('YYYY-MM-DD HH:mm:ss');
+
+
+        let checkoldrequest=await knexConnect("edit_form_request")
+        .select("*")
+        .where({
+            "form_id":data.form_id,
+            "edit_status":"Pending"
+        })
+
+        if(checkoldrequest.length>0)
+        {
+            return res.send({
+                status:false,
+                message:"Request already present."
+            })
+        }
+
+        let insertrequest=await knexConnect("edit_form_request")
+        .insert({
+            "form_id":data.form_id,
+            "requested_by_name":user_name,
+            "requested_by_id":user_id,
+            "requested_by_empid":emp_id,
+            "request_created_on": formattedDate,
+            "request_for_userid": data.user_id,
+            "request_for_name": data.user_first_name,
+            "request_for_empid": data.emp_id,
+            "financial_year": data.financial_year,
+        })
+
+        return res.send({
+            status:true,
+            message:"Request Created Successfully."
+        })
+        
+    } catch (error) {
+
+        return res.send({
+            status: false,
+            message: "Error Occured",
+            data: error.message
+        })
+        
+    }
+}
+
+const acceptEditRequest=async(req,res)=>{
+    let requestid = req.body.requestid;
+    let status = req.body.status;
+    let formattedDate = moment().format('YYYY-MM-DD HH:mm:ss');
+
+    try {
+
+        let updatestatus= await knexConnect("edit_form_request").update({
+            "request_status":status,
+            "request_accepted_on":formattedDate
+        }).where("request_id",requestid)
+
+        return res.send({
+            status: true,
+            message:"Status Updated"
+        })
+
+        
+    } catch (error) {
+        return res.send({
+            status: false,
+            message: "Error Occured",
+            data: error.message
+        })
+    }
+}
+
+
+
+module.exports = {acceptEditRequest,
+    getPendingFormsForMarks, getSubmittedFormsNew,
+    updateFormDateAndMarks, approveRejectNew,
+    getTotalFormsTotalUsersNew, sendToDepartmentHead,
+    updateFormDataNew, getFormsDepartmentNew, addNewForm,
+    viewMyFormsNew, getSubmittedForms, sendDepartmentFinancialYear,
+    getTotalFormsTotalUsers, addForm, viewMyForms, getParticularForm,
+    getParticularFormNew, getFormsDepartment, sendForVerification,
+    getInProgressForms, approveReject, updateFormData,editRequestForm
+}

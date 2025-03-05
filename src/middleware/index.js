@@ -30,6 +30,15 @@ const authMiddlewareUser = async (req, res, next) => {
                         if (dataresp.status) {
                             req.department_id = dataresp.data.department_id;
                             req.department_name = dataresp.data.department_name;
+                            req.emp_id = dataresp.data.emp_id;
+                            if(dataresp.data.designated_data)
+                            {
+                                req.designated_user_id= dataresp.data.designated_data.designated_user_id,
+                                req.designated_designation= dataresp.data.designated_data.designated_designation,
+                                req.designated_department_id= dataresp.data.designated_data.designated_department_id,
+                                req.designated_user_first_name= dataresp.data.designated_data.designated_user_first_name
+                            }
+                            // console.log(dataresp,"this is dataresp")
                         }
 
                         req.user_email = decoded.user_email;
