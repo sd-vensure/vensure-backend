@@ -487,7 +487,7 @@ const sendForVerification = async (req, res) => {
         return res.send({
             status: true,
             message: "Sent for Approval",
-            test:"tyeuhda"
+            test: "tyeuhda"
         })
 
     } catch (error) {
@@ -696,7 +696,7 @@ const updateFormDataNew = async (req, res) => {
             let createobj = {};
             let category_id = ele.category_id;
             let category_name = ele.category_name;
-            let include_kpi = ele.include_kpi;
+            let include_kpi = ele.include_kpis;
             let form_id = uniqueid;
 
             createobj = { ...createobj, category_id, category_name, form_id, include_kpi };
@@ -738,6 +738,88 @@ const updateFormDataNew = async (req, res) => {
             status: true,
             message: "Status Updated",
             data: datatopush
+        })
+
+    } catch (error) {
+
+        return res.send({
+            status: false,
+            message: "Error Occured",
+            data: error.message
+        })
+
+    }
+
+}
+
+
+const updateFormDataSpecialNew = async (req, res) => {
+
+    let uniqueid = req.params.uniqueid;
+    let request_id = req.params.requestid;
+
+    let uniquenew = generateAlphanumericString(10);
+
+    let data = req.body.data;
+
+    let formattedDate = moment().format('YYYY-MM-DD HH:mm:ss');
+
+    try {
+
+
+        let datatopush = [];
+
+        data.map((ele, index) => {
+            let createobj = {};
+            let category_id = ele.category_id;
+            let category_name = ele.category_name;
+            let include_kpi = ele.include_kpis;
+            let form_id = uniquenew;
+
+            createobj = { ...createobj, category_id, category_name, form_id, include_kpi };
+
+            ele.kras.length > 0 &&
+                ele.kras.map((ele1, index1) => {
+                    let kra_id = generateAlphanumericString(10)
+                    let kra_text = ele1.text;
+                    createobj = { ...createobj, kra_id, kra_text, "kpi_id": null, "kpi_text": null, "kpi_target": null, "kpi_quarter": null, "kpi_weightage": null };
+                    datatopush.push(createobj)
+
+                    ele1.kpis && ele1.kpis.length > 0 && ele1.kpis.map((ele2, index2) => {
+                        createobj = {
+                            ...createobj,
+                            kpi_id: generateAlphanumericString(15),
+                            kpi_text: ele2.name,
+                            kpi_target: ele2.target,
+                            kpi_quarter: ele2.quarter,
+                            kpi_weightage: ele2.number,
+                            kpi_complete: ele2.completion,
+                            kpi_obtained: ele2.obtained
+                        }
+                        datatopush.push(createobj)
+                    })
+
+                })
+
+        })
+
+        let insertformdata = await knexConnect("user_form_new").insert(datatopush);
+
+        let updatetrackform = await knexConnect("user_form_track_new").update({
+            "updated_by": req.user_id,
+            "updated_at": formattedDate,
+            "form_id": uniquenew
+        }).where("form_id", uniqueid);
+
+        let updaterequesttable = await knexConnect("edit_form_request").update({
+            "edit_status": "Done",
+            "new_form_id": uniquenew
+        }).where("request_id", request_id)
+
+        return res.send({
+            status: true,
+            message: "Status Updated",
+            // data: datatopush
         })
 
     } catch (error) {
@@ -854,6 +936,8 @@ const getSubmittedForms = async (req, res) => {
 
 const getSubmittedFormsNew = async (req, res) => {
 
+    let financialyear=req.query.financial;
+
     try {
 
         let data = await knexConnect("user_form_track_new")
@@ -870,7 +954,8 @@ const getSubmittedFormsNew = async (req, res) => {
             .join("department", "department.department_id", "user_form_track_new.department_id")
             .leftJoin("emp_reporting_mapper", "emp_reporting_mapper.emp_id", "user.user_id") // Get the designated_id
             .leftJoin("user as designated_user", "designated_user.user_id", "emp_reporting_mapper.reporting_id") // Fetch the designated user's name
-            .where("user_form_track_new.is_shared", "Y");
+            .where("user_form_track_new.is_shared", "Y")
+            .andWhere("user_form_track_new.financial_year",financialyear)
 
         // console.log(data, "this is new data")
 
@@ -1114,7 +1199,7 @@ const getPendingFormsForMarks = async (req, res) => {
         //     .groupBy("user_form_track_new.form_id"); // Ensures distinct form_id while keeping all data
 
         let data = await knexConnect("user_form_track_new")
-            .select("user_form_track_new.*", "user.user_first_name","user.emp_id","user.designation","department.department_name as department_user") // Select all from user_form_track_new and user
+            .select("user_form_track_new.*", "user.user_first_name", "user.emp_id", "user.designation", "department.department_name as department_user") // Select all from user_form_track_new and user
             .join("user_form_new", "user_form_new.form_id", "user_form_track_new.form_id") // Join with user_form_new on form_id
             .join("user", "user_form_track_new.user_id", "user.user_id") // Join with user table on user_id
             .join("department", "department.department_id", "user.department_id") // Join with user table on user_id
@@ -1125,25 +1210,24 @@ const getPendingFormsForMarks = async (req, res) => {
             // .whereNull("user_form_new.kpi_obtained") // kpi_obtained = null
             .where((qb) => {
                 qb.whereNotNull("user_form_new.kpi_id")
-                  .whereNotNull("user_form_new.kpi_complete")
-                  .whereNull("user_form_new.kpi_obtained");
+                    .whereNotNull("user_form_new.kpi_complete")
+                    .whereNull("user_form_new.kpi_obtained");
             })
-            
+
             .groupBy("user_form_track_new.form_id"); // Ensure distinct form_id while keeping user data
 
-        if(data.length>0)
-        {
+        if (data.length > 0) {
             return res.send({
                 status: true,
                 data: data,
-                message:"Data Found"
+                message: "Data Found"
             })
         }
-        else{
+        else {
             return res.send({
                 status: false,
                 data: [],
-                message:"No Form Found"
+                message: "No Form Found"
             })
         }
 
@@ -1159,50 +1243,53 @@ const getPendingFormsForMarks = async (req, res) => {
 }
 
 
-const editRequestForm=async(req,res)=>{
-    let data=req.body.data;
-    let user_id=req.user_id;
-    let user_name=req.user_name;
-    let emp_id=req.emp_id;
+const editRequestForm = async (req, res) => {
+    let data = req.body.data;
+    let user_id = req.user_id;
+    let user_name = req.user_name;
+    let emp_id = req.emp_id;
 
     try {
 
         let formattedDate = moment().format('YYYY-MM-DD HH:mm:ss');
 
 
-        let checkoldrequest=await knexConnect("edit_form_request")
-        .select("*")
-        .where({
-            "form_id":data.form_id,
-            "edit_status":"Pending"
-        })
+        let checkoldrequest = await knexConnect("edit_form_request")
+            .select("*")
+            .where({
+                "form_id": data.form_id,
+                "request_status": "Pending"
+            })
+            .orWhere(function () {
+                this.where("request_status", "Accepted")
+                    .andWhere("edit_status", "Pending");
+            });
 
-        if(checkoldrequest.length>0)
-        {
+        if (checkoldrequest.length > 0) {
             return res.send({
-                status:false,
-                message:"Request already present."
+                status: false,
+                message: "Request already present."
             })
         }
 
-        let insertrequest=await knexConnect("edit_form_request")
-        .insert({
-            "form_id":data.form_id,
-            "requested_by_name":user_name,
-            "requested_by_id":user_id,
-            "requested_by_empid":emp_id,
-            "request_created_on": formattedDate,
-            "request_for_userid": data.user_id,
-            "request_for_name": data.user_first_name,
-            "request_for_empid": data.emp_id,
-            "financial_year": data.financial_year,
-        })
+        let insertrequest = await knexConnect("edit_form_request")
+            .insert({
+                "form_id": data.form_id,
+                "requested_by_name": user_name,
+                "requested_by_id": user_id,
+                "requested_by_empid": emp_id,
+                "request_created_on": formattedDate,
+                "request_for_userid": data.user_id,
+                "request_for_name": data.user_first_name,
+                "request_for_empid": data.emp_id,
+                "financial_year": data.financial_year,
+            })
 
         return res.send({
-            status:true,
-            message:"Request Created Successfully."
+            status: true,
+            message: "Request Created Successfully."
         })
-        
+
     } catch (error) {
 
         return res.send({
@@ -1210,28 +1297,85 @@ const editRequestForm=async(req,res)=>{
             message: "Error Occured",
             data: error.message
         })
-        
+
     }
 }
 
-const acceptEditRequest=async(req,res)=>{
+const viewEditRequests = async (req, res) => {
+    let financial = req.params.financial;
+
+    let user_id = req.query.userid || null;
+
+    try {
+
+        // let data = await knexConnect("edit_form_request")
+        //     .select("*")
+        //     .where({
+        //         "financial_year": financial
+        //     })
+
+        let query = knexConnect("edit_form_request")
+            .select("*")
+            .where({
+                "financial_year": financial
+            });
+
+        if (user_id) {
+            query = query.andWhere({
+                "requested_by_id": user_id
+            });
+        }
+
+
+        let data = await query;
+
+        if (data.length > 0) {
+
+            return res.send({
+                status: true,
+                message: "Requests found.",
+                data: data
+            })
+        }
+        else {
+            return res.send({
+                status: false,
+                message: "No requests found."
+            })
+
+        }
+
+
+    } catch (error) {
+
+        return res.send({
+            status: false,
+            message: "Error Occured",
+            data: error.message
+        })
+
+    }
+
+}
+
+const acceptEditRequest = async (req, res) => {
     let requestid = req.body.requestid;
     let status = req.body.status;
     let formattedDate = moment().format('YYYY-MM-DD HH:mm:ss');
 
     try {
 
-        let updatestatus= await knexConnect("edit_form_request").update({
-            "request_status":status,
-            "request_accepted_on":formattedDate
-        }).where("request_id",requestid)
+        let updatestatus = await knexConnect("edit_form_request").update({
+            "request_status": status,
+            "request_accepted_on": formattedDate
+        }).where("request_id", requestid)
 
         return res.send({
             status: true,
-            message:"Status Updated"
+            message: "Status Updated"
         })
 
-        
+
     } catch (error) {
         return res.send({
             status: false,
@@ -1243,7 +1387,10 @@ const acceptEditRequest=async(req,res)=>{
 
 
 
-module.exports = {acceptEditRequest,
+
+
+module.exports = {
+    acceptEditRequest, viewEditRequests, updateFormDataSpecialNew,
     getPendingFormsForMarks, getSubmittedFormsNew,
     updateFormDateAndMarks, approveRejectNew,
     getTotalFormsTotalUsersNew, sendToDepartmentHead,
@@ -1251,5 +1398,5 @@ module.exports = {acceptEditRequest,
     viewMyFormsNew, getSubmittedForms, sendDepartmentFinancialYear,
     getTotalFormsTotalUsers, addForm, viewMyForms, getParticularForm,
     getParticularFormNew, getFormsDepartment, sendForVerification,
-    getInProgressForms, approveReject, updateFormData,editRequestForm
+    getInProgressForms, approveReject, updateFormData, editRequestForm
 }

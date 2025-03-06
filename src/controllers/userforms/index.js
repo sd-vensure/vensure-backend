@@ -1,6 +1,6 @@
 const express = require("express");
 const { authMiddlewareUser } = require("../../middleware");
-const {getPendingFormsForMarks,viewMyFormsNew, addForm, viewMyForms, getParticularForm,getParticularFormNew, getFormsDepartment, sendForVerification, getInProgressForms, approveReject, updateFormData, getTotalFormsTotalUsers, sendDepartmentFinancialYear, getSubmittedForms, addNewForm, updateFormDataNew, getFormsDepartmentNew, getTotalFormsTotalUsersNew, sendToDepartmentHead, approveRejectNew, updateFormDateAndMarks, getSubmittedFormsNew, editRequestForm, acceptEditRequest } = require("./userformController");
+const {getPendingFormsForMarks,viewMyFormsNew, addForm, viewMyForms, getParticularForm,getParticularFormNew, getFormsDepartment, sendForVerification, getInProgressForms, approveReject, updateFormData, getTotalFormsTotalUsers, sendDepartmentFinancialYear, getSubmittedForms, addNewForm, updateFormDataNew, getFormsDepartmentNew, getTotalFormsTotalUsersNew, sendToDepartmentHead, approveRejectNew, updateFormDateAndMarks, getSubmittedFormsNew, editRequestForm, acceptEditRequest, viewEditRequests, updateFormDataSpecialNew } = require("./userformController");
 const router = express.Router();
 
 router.post("/add",authMiddlewareUser,addForm);
@@ -38,12 +38,14 @@ router.post("/getpendingmarksassign",authMiddlewareUser,getPendingFormsForMarks)
 
 router.put("/update/:uniqueid",authMiddlewareUser,updateFormData);
 router.put("/updatenew/:uniqueid",authMiddlewareUser,updateFormDataNew);
+router.put("/updatespecialnew/:uniqueid/:requestid",authMiddlewareUser,updateFormDataSpecialNew);
 
 router.put("/updatedateandmarks",authMiddlewareUser,updateFormDateAndMarks);
 
 
 router.post("/editrequest",authMiddlewareUser,editRequestForm)
-router.post("/acceptrejectrequest",acceptEditRequest)
+router.get("/vieweditrequest/:financial",authMiddlewareUser,viewEditRequests)
+router.put("/acceptrejectrequest",acceptEditRequest)
 
 
 
