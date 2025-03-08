@@ -13,7 +13,7 @@ app.use(cookieParser());
 //   : ["http://localhost:3000"];
 
 app.use(cors({
-  origin: ["http://localhost:3000","http://localhost:3001"],
+  origin: ["http://localhost:3000","http://localhost:3001","http://192.168.1.200","192.168.1.200","http://192.168.1.200:8000","http://192.168.1.200:3002","192.168.1.200:8000","192.168.1.200:3002"],
   credentials:true
 }));
 
