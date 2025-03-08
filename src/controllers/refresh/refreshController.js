@@ -53,8 +53,21 @@ const getToken = async (req, res) => {
 
                             userdata = { ...check.data, "roles": rolesreturn }
 
+                            let fetchdesignatedperson = await knexConnect('emp_reporting_mapper')
+                                .select('user.*', 'emp_reporting_mapper.*')
+                                .join('user', 'user.user_id', 'emp_reporting_mapper.reporting_id')
+                                .where('emp_reporting_mapper.emp_id', userdata.user_id);
 
-                            return res.status(200).json({ status: true, data: userdata, token: accessToken, message: "New Token Generated Successfully" });
+                            departmenthead = {
+                                "designation": fetchdesignatedperson[0].designation,
+                                "department_id": fetchdesignatedperson[0].department_id,
+                                "user_first_name": fetchdesignatedperson[0].user_first_name,
+                                "user_contact": fetchdesignatedperson[0].user_contact,
+                                "user_id": fetchdesignatedperson[0].user_id,
+                            }
+
+
+                            return res.status(200).json({ status: true, data: { ...userdata, departmenthead }, token: accessToken, message: "New Token Generated Successfully" });
                         }
                     }
                 }

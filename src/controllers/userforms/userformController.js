@@ -71,7 +71,7 @@ const addNewForm = async (req, res) => {
 
     try {
 
-        let checkformpresent = await knexConnect("user_form_track").select("*").where("financial_year", financialyear).andWhere("user_id", req.user_id);
+        let checkformpresent = await knexConnect("user_form_track_new").select("*").where("financial_year", financialyear).andWhere("user_id", req.user_id);
 
         if (checkformpresent.length > 0) {
             return res.send({
@@ -91,30 +91,36 @@ const addNewForm = async (req, res) => {
 
             createobj = { ...createobj, category_id, category_name, form_id, include_kpi };
 
-            ele.kras.length > 0 &&
-                ele.kras.map((ele1, index1) => {
-                    let kra_id = generateAlphanumericString(10)
-                    let kra_text = ele1.text;
-                    createobj = { ...createobj, kra_id, kra_text, "kpi_id": null, "kpi_text": null, "kpi_target": null, "kpi_quarter": null, "kpi_weightage": null };
-                    datatopush.push(createobj)
+            if (ele.kras.length > 0) {
 
-                    ele1.kpis && ele1.kpis.length > 0 && ele1.kpis.map((ele2, index2) => {
-                        createobj = {
-                            ...createobj,
-                            kpi_id: generateAlphanumericString(15),
-                            kpi_text: ele2.name,
-                            kpi_target: ele2.date,
-                            kpi_quarter: ele2.quarter,
-                            kpi_weightage: ele2.number
-                        }
+
+                ele.kras.length > 0 &&
+                    ele.kras.map((ele1, index1) => {
+                        let kra_id = generateAlphanumericString(10)
+                        let kra_text = ele1.text;
+                        createobj = { ...createobj, kra_id, kra_text, "kpi_id": null, "kpi_text": null, "kpi_target": null, "kpi_quarter": null, "kpi_weightage": null };
                         datatopush.push(createobj)
+
+                        ele1.kpis && ele1.kpis.length > 0 && ele1.kpis.map((ele2, index2) => {
+                            createobj = {
+                                ...createobj,
+                                kpi_id: generateAlphanumericString(15),
+                                kpi_text: ele2.name,
+                                kpi_target: ele2.date,
+                                kpi_quarter: ele2.quarter,
+                                kpi_weightage: ele2.number
+                            }
+                            datatopush.push({ ...createobj })
+                        })
+
+
+
                     })
+            }
+            else {
+                datatopush.push({ ...createobj, "kra_id": null, "kra_text": null, "kpi_id": null, "kpi_text": null, "kpi_target": null, "kpi_quarter": null, "kpi_weightage": null })
+            }
 
-
-
-                })
-
-            // datatopush.push(createobj)
 
         })
 
@@ -225,11 +231,51 @@ const viewMyFormsNew = async (req, res) => {
             .join("department", "department.department_id", "user_form_track_new.department_id")
             .where("user_form_track_new.user_id", user_id);
 
+
         if (data && data.length > 0) {
+
+            let arrayofformids = [];
+
+            data.map((ele) => {
+                arrayofformids.push(ele.form_id)
+            })
+
+            // let categorycount = await knexConnect("user_form_new")
+            //     .select("form_id", "category_id")
+            //     .sum("kpi_weightage as total_weightage") // Sum kpi_weightage instead of count
+            //     .whereIn("form_id", arrayofformids) // Filter only given form_ids
+            //     .groupBy("form_id", "category_id");
+
+            let categorycount = await knexConnect("user_form_new")
+                .select("form_id", "category_id")
+                .sum({ total_weightage: knexConnect.raw("COALESCE(kpi_weightage, 0)") }) // Handle NULL values
+                .whereIn("form_id", arrayofformids) // Filter only given form_ids
+                .groupBy("form_id", "category_id");
+
+            const formattedData = categorycount.reduce((acc, item) => {
+                let existingForm = acc.find((f) => f.form_id === item.form_id);
+                if (!existingForm) {
+                    existingForm = { form_id: item.form_id, categoriesdata: [] };
+                    acc.push(existingForm);
+                }
+                existingForm.categoriesdata.push({ category_id: item.category_id, total: item.total_weightage });
+                return acc;
+            }, []);
+
+            let finaldatatosend = [];
+
+            data.map((ele) => {
+                let formid = ele.form_id;
+
+                let catfound = formattedData.find((vv) => vv.form_id == formid);
+
+                finaldatatosend.push({ ...ele, categoriesdata: catfound.categoriesdata })
+            })
+
             return res.send({
                 status: true,
                 message: "Form found Successfully",
-                data: data
+                data: finaldatatosend
             })
         }
         else if (data.length == 0) {
@@ -700,29 +746,34 @@ const updateFormDataNew = async (req, res) => {
             let form_id = uniqueid;
 
             createobj = { ...createobj, category_id, category_name, form_id, include_kpi };
+            if (ele.kras.length > 0) {
 
-            ele.kras.length > 0 &&
-                ele.kras.map((ele1, index1) => {
-                    let kra_id = generateAlphanumericString(10)
-                    let kra_text = ele1.text;
-                    createobj = { ...createobj, kra_id, kra_text, "kpi_id": null, "kpi_text": null, "kpi_target": null, "kpi_quarter": null, "kpi_weightage": null };
-                    datatopush.push(createobj)
-
-                    ele1.kpis && ele1.kpis.length > 0 && ele1.kpis.map((ele2, index2) => {
-                        createobj = {
-                            ...createobj,
-                            kpi_id: generateAlphanumericString(15),
-                            kpi_text: ele2.name,
-                            kpi_target: ele2.target,
-                            kpi_quarter: ele2.quarter,
-                            kpi_weightage: ele2.number,
-                            kpi_complete: ele2.completion,
-                            kpi_obtained: ele2.obtained
-                        }
+                ele.kras.length > 0 &&
+                    ele.kras.map((ele1, index1) => {
+                        let kra_id = generateAlphanumericString(10)
+                        let kra_text = ele1.text;
+                        createobj = { ...createobj, kra_id, kra_text, "kpi_id": null, "kpi_text": null, "kpi_target": null, "kpi_quarter": null, "kpi_weightage": null };
                         datatopush.push(createobj)
-                    })
 
-                })
+                        ele1.kpis && ele1.kpis.length > 0 && ele1.kpis.map((ele2, index2) => {
+                            createobj = {
+                                ...createobj,
+                                kpi_id: generateAlphanumericString(15),
+                                kpi_text: ele2.name,
+                                kpi_target: ele2.target,
+                                kpi_quarter: ele2.quarter,
+                                kpi_weightage: ele2.number,
+                                kpi_complete: ele2.completion,
+                                kpi_obtained: ele2.obtained
+                            }
+                            datatopush.push(createobj)
+                        })
+
+                    })
+            }
+            else {
+                datatopush.push({ ...createobj, "kra_id": null, "kra_text": null, "kpi_id": null, "kpi_text": null, "kpi_target": null, "kpi_quarter": null, "kpi_weightage": null })
+            }
 
         })
 
@@ -936,7 +987,7 @@ const getSubmittedForms = async (req, res) => {
 
 const getSubmittedFormsNew = async (req, res) => {
 
-    let financialyear=req.query.financial;
+    let financialyear = req.query.financial;
 
     try {
 
@@ -955,7 +1006,7 @@ const getSubmittedFormsNew = async (req, res) => {
             .leftJoin("emp_reporting_mapper", "emp_reporting_mapper.emp_id", "user.user_id") // Get the designated_id
             .leftJoin("user as designated_user", "designated_user.user_id", "emp_reporting_mapper.reporting_id") // Fetch the designated user's name
             .where("user_form_track_new.is_shared", "Y")
-            .andWhere("user_form_track_new.financial_year",financialyear)
+            .andWhere("user_form_track_new.financial_year", financialyear)
 
         // console.log(data, "this is new data")
 
