@@ -1,0 +1,19 @@
+PORT= 8000
+
+
+ACCESS_PRIVATE_KEY="thisisthesecretkeyprivate"
+ACCESS_EXPIRE_TIME="1m"
+REFRESH_PRIVATE_KEY="thisisthesecretkeyrefresh"
+REFRESH_EXPIRE_TIME="12h"
+
+JWT_TOKEN_KEY="thisisthesecretkeyforJWT"
+JWT_EXPIRE_TIME="12h"
+
+COOKIE_EXPIRE_TIME_HOURS="12"
+
+
+LOCAL_KNEX_DB_HOST="localhost"
+LOCAL_KNEX_DB_USERNAME="root"
+LOCAL_KNEX_DB_PASSWORD=""
+LOCAL_KNEX_DB_DBNAME="vensure-database"
+ALLOWED_ORIGINS=["http://localhost:3000","localhost:3000"]
