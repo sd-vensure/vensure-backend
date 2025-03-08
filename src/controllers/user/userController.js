@@ -296,25 +296,395 @@ const insertingvalueshod = async (req, res) => {
 
     try {
 
-        let data = [
-           
-            {
-                "user_first_name": "Sathyanarayana Vemula",
-                "emp_id": "SATHYA",
-                "department_id": "25",
-                "user_password": "Sathya",
-                "designation": "CEO",
-                "doj": "2010-01-01"
-            },
-            {
-                "user_first_name": "Nirav Vashi",
-                "emp_id": "NIRAV",
-                "department_id": "25",
-                "user_password": "NIRAV",
-                "designation": "Business Development",
-                "doj": "2010-01-01"
-            }
-        ]
+        let data =
+            [
+                {
+                    "user_first_name": "Abhinav Kumar Narendra Singh",
+                    "emp_id": "IDVE850",
+                    "department_id": "14",
+                    "user_password": "IDVE850",
+                    "designation": "Assistant Manager ",
+                    "doj": "2024-05-14"
+                },
+                {
+                    "user_first_name": "Amit Chandrakant Patil",
+                    "emp_id": "IDVE860",
+                    "department_id": "14",
+                    "user_password": "IDVE860",
+                    "designation": "Sr. Executive",
+                    "doj": "2024-06-19"
+                },
+                {
+                    "user_first_name": "Amol Gadhave",
+                    "emp_id": "IDVE471",
+                    "department_id": "2",
+                    "user_password": "IDVE471",
+                    "designation": "Assistant Manager ",
+                    "doj": "2021-12-01"
+                },
+                {
+                    "user_first_name": "Anand Kumar Shukla",
+                    "emp_id": "IDVE865",
+                    "department_id": "2",
+                    "user_password": "IDVE865",
+                    "designation": "Manager",
+                    "doj": "2024-07-16"
+                },
+                {
+                    "user_first_name": "Ankush Ravindra Deshmukh",
+                    "emp_id": "IDVE847",
+                    "department_id": "20",
+                    "user_password": "IDVE847",
+                    "designation": "Asst. Manager",
+                    "doj": "2024-05-06"
+                },
+                {
+                    "user_first_name": "Apurva Goje",
+                    "emp_id": "IDVE813",
+                    "department_id": "9",
+                    "user_password": "IDVE813",
+                    "designation": "Sr. Officer",
+                    "doj": "2024-02-19"
+                },
+                {
+                    "user_first_name": "Arjun Chopra",
+                    "emp_id": "IDVE370",
+                    "department_id": "6",
+                    "user_password": "IDVE370",
+                    "designation": "Manager",
+                    "doj": "2021-03-19"
+                },
+                {
+                    "user_first_name": "Ashwin trinidad",
+                    "emp_id": "IDVE849",
+                    "department_id": "1",
+                    "user_password": "IDVE849",
+                    "designation": "CFO",
+                    "doj": "2024-05-07"
+                },
+                {
+                    "user_first_name": "Avinash Jaiswal",
+                    "emp_id": "IDVE171",
+                    "department_id": "20",
+                    "user_password": "IDVE171",
+                    "designation": "Deputy General Manager",
+                    "doj": "2016-10-17"
+                },
+                {
+                    "user_first_name": "Avinash Nimbaji Salunkhe",
+                    "emp_id": "IDVE307",
+                    "department_id": "9",
+                    "user_password": "IDVE307",
+                    "designation": "Senior Manager",
+                    "doj": "2021-09-22"
+                },
+                {
+                    "user_first_name": "Bandu Sandurao Birsane",
+                    "emp_id": "IDVE737",
+                    "department_id": "20",
+                    "user_password": "IDVE737",
+                    "designation": "Manager",
+                    "doj": "2023-06-05"
+                },
+                {
+                    "user_first_name": "Bhakti Basare",
+                    "emp_id": "IDVE612",
+                    "department_id": "7",
+                    "user_password": "IDVE612",
+                    "designation": "Research Scientist",
+                    "doj": "2022-06-13"
+                },
+                {
+                    "user_first_name": "Bibhuti Ray",
+                    "emp_id": "IDVE916",
+                    "department_id": "6",
+                    "user_password": "IDVE916",
+                    "designation": "Dy. Manager",
+                    "doj": "2024-12-23"
+                },
+                {
+                    "user_first_name": "Deepak Shivaji Fulmali",
+                    "emp_id": "IDVE771",
+                    "department_id": "18",
+                    "user_password": "IDVE771",
+                    "designation": "Sr. Manager",
+                    "doj": "2023-10-09"
+                },
+                {
+                    "user_first_name": "Dinesh Rohidas Rathod",
+                    "emp_id": "IDVE908",
+                    "department_id": "7",
+                    "user_password": "IDVE908",
+                    "designation": "Sr. Research Scientist",
+                    "doj": "2024-12-12"
+                },
+                {
+                    "user_first_name": "Gaurav Dhamane",
+                    "emp_id": "IDVE414",
+                    "department_id": "10",
+                    "user_password": "IDVE414",
+                    "designation": "Manager",
+                    "doj": "2021-07-09"
+                },
+                {
+                    "user_first_name": "Girish Pande",
+                    "emp_id": "IDVE241",
+                    "department_id": "14",
+                    "user_password": "IDVE241",
+                    "designation": "Assistant General Manager",
+                    "doj": "2018-12-26"
+                },
+                {
+                    "user_first_name": "Gorakh Nirmal",
+                    "emp_id": "IDVE395",
+                    "department_id": "20",
+                    "user_password": "IDVE395",
+                    "designation": "Sr. VP",
+                    "doj": "2021-06-12"
+                },
+                {
+                    "user_first_name": "Kanhu Charan Harihar Pradhan",
+                    "emp_id": "IDVE745",
+                    "department_id": "2",
+                    "user_password": "IDVE745",
+                    "designation": "Manager",
+                    "doj": "2023-07-17"
+                },
+                {
+                    "user_first_name": "Kavita Hanumant Shinde",
+                    "emp_id": "IDVE884",
+                    "department_id": "3",
+                    "user_password": "IDVE884",
+                    "designation": "Deputy Manager",
+                    "doj": "2024-09-27"
+                },
+                {
+                    "user_first_name": "Khemchandra Murlidhar Dadare",
+                    "emp_id": "IDVE569",
+                    "department_id": "2",
+                    "user_password": "IDVE569",
+                    "designation": "Senior Manager",
+                    "doj": "2022-03-22"
+                },
+                {
+                    "user_first_name": "Kunwar Satyaprakash Singh",
+                    "emp_id": "IDVE725",
+                    "department_id": "20",
+                    "user_password": "IDVE725",
+                    "designation": "Manager",
+                    "doj": "2023-04-12"
+                },
+                {
+                    "user_first_name": "Manoj Ramdas Ghogare",
+                    "emp_id": "IDVE084",
+                    "department_id": "6",
+                    "user_password": "IDVE084",
+                    "designation": "Assistant Manager ",
+                    "doj": "2014-04-18"
+                },
+                {
+                    "user_first_name": "Mudit Srivastava",
+                    "emp_id": "IDVE356",
+                    "department_id": "6",
+                    "user_password": "IDVE356",
+                    "designation": "Manager",
+                    "doj": "2021-03-04"
+                },
+                {
+                    "user_first_name": "Narayan Raktade",
+                    "emp_id": "IDVE003",
+                    "department_id": "3",
+                    "user_password": "IDVE003",
+                    "designation": "General Manager",
+                    "doj": "2010-10-16"
+                },
+                {
+                    "user_first_name": "Naveen Karupothula",
+                    "emp_id": "IDVE936",
+                    "department_id": "15",
+                    "user_password": "IDVE936",
+                    "designation": "Manager",
+                    "doj": "2025-01-27"
+                },
+                {
+                    "user_first_name": "Paras Pravin Sathbhaya",
+                    "emp_id": "IDVE253",
+                    "department_id": "1",
+                    "user_password": "IDVE253",
+                    "designation": "Deputy General Manager",
+                    "doj": "2019-03-18"
+                },
+                {
+                    "user_first_name": "Prakash Maruti Devan",
+                    "emp_id": "IDVE945",
+                    "department_id": "24",
+                    "user_password": "IDVE945",
+                    "designation": "Manager",
+                    "doj": "2025-02-08"
+                },
+                {
+                    "user_first_name": "Pranali Manore",
+                    "emp_id": "IDVE429",
+                    "department_id": "9",
+                    "user_password": "IDVE429",
+                    "designation": "Sr. Executive",
+                    "doj": "2021-08-04"
+                },
+                {
+                    "user_first_name": "Randheer Deepnarayan Singh",
+                    "emp_id": "IDVE153",
+                    "department_id": "6",
+                    "user_password": "IDVE153",
+                    "designation": "Assistant General Manager",
+                    "doj": "2016-04-13"
+                },
+                {
+                    "user_first_name": "Ranjita Tabib",
+                    "emp_id": "IDVE788",
+                    "department_id": "6",
+                    "user_password": "IDVE788",
+                    "designation": "Deputy Manager",
+                    "doj": "2023-11-29"
+                },
+                {
+                    "user_first_name": "Rohan Deepak Zade",
+                    "emp_id": "IDVE942",
+                    "department_id": "20",
+                    "user_password": "IDVE942",
+                    "designation": "Manager",
+                    "doj": "2025-02-06"
+                },
+                {
+                    "user_first_name": "Rushikesh Harish Dhankute",
+                    "emp_id": "IDVE924",
+                    "department_id": "3",
+                    "user_password": "IDVE924",
+                    "designation": "Dy. Manager",
+                    "doj": "2025-01-08"
+                },
+                {
+                    "user_first_name": "Sachin Galande",
+                    "emp_id": "IDVE491",
+                    "department_id": "20",
+                    "user_password": "IDVE491",
+                    "designation": "Manager",
+                    "doj": "2022-01-20"
+                },
+                {
+                    "user_first_name": "Sachin Mirge",
+                    "emp_id": "IDVE689",
+                    "department_id": "7",
+                    "user_password": "IDVE689",
+                    "designation": "Assistant Manager",
+                    "doj": "2022-12-05"
+                },
+                {
+                    "user_first_name": "Sachin Vilas Deshmukh",
+                    "emp_id": "IDVE013",
+                    "department_id": "3",
+                    "user_password": "IDVE013",
+                    "designation": "Deputy Manager ",
+                    "doj": "2011-08-05"
+                },
+                {
+                    "user_first_name": "Sagar Bajirao Jagadale",
+                    "emp_id": "IDVE925",
+                    "department_id": "2",
+                    "user_password": "IDVE925",
+                    "designation": "Assistant Manager",
+                    "doj": "2025-01-10"
+                },
+                {
+                    "user_first_name": "Sanjay Shankar Jadhav",
+                    "emp_id": "IDVE646",
+                    "department_id": "2",
+                    "user_password": "IDVE646",
+                    "designation": "Deputy General Manager",
+                    "doj": "2022-08-17"
+                },
+                {
+                    "user_first_name": "Saswat Padhi",
+                    "emp_id": "IDVE007",
+                    "department_id": "7",
+                    "user_password": "IDVE007",
+                    "designation": "Deputy General Manager",
+                    "doj": "2010-09-01"
+                },
+                {
+                    "user_first_name": "Shivaprasad Venkateshwarlu Vemula",
+                    "emp_id": "IDVE160",
+                    "department_id": "11",
+                    "user_password": "IDVE160",
+                    "designation": "Manager",
+                    "doj": "2016-06-01"
+                },
+                {
+                    "user_first_name": "Soma De",
+                    "emp_id": "IDVE727",
+                    "department_id": "8",
+                    "user_password": "IDVE727",
+                    "designation": "Sterile Head",
+                    "doj": "2023-04-24"
+                },
+                {
+                    "user_first_name": "Subhash Maruti Nile",
+                    "emp_id": "IDVE114",
+                    "department_id": "3",
+                    "user_password": "IDVE114",
+                    "designation": "Deputy Manager",
+                    "doj": "2015-02-09"
+                },
+                {
+                    "user_first_name": "Sujit Ganpat Kadam",
+                    "emp_id": "IDVE888",
+                    "department_id": "5",
+                    "user_password": "IDVE888",
+                    "designation": "Manager",
+                    "doj": "2024-10-07"
+                },
+                {
+                    "user_first_name": "Sujit Sakpal",
+                    "emp_id": "IDVE477",
+                    "department_id": "17",
+                    "user_password": "IDVE477",
+                    "designation": "President",
+                    "doj": "2021-12-01"
+                },
+                {
+                    "user_first_name": "Swapnil Yashwant Bhide",
+                    "emp_id": "IDVE449",
+                    "department_id": "13",
+                    "user_password": "IDVE449",
+                    "designation": "Assistant Manager ",
+                    "doj": "2021-09-20"
+                },
+                {
+                    "user_first_name": "Vaishali Rajendra Dumbre",
+                    "emp_id": "IDVE211",
+                    "department_id": "19",
+                    "user_password": "IDVE211",
+                    "designation": "Manager",
+                    "doj": "2018-04-25"
+                }
+                ,
+
+                {
+                    "user_first_name": "Sathyanarayana Vemula",
+                    "emp_id": "SATHYA",
+                    "department_id": "25",
+                    "user_password": "Sathya",
+                    "designation": "CEO",
+                    "doj": "2010-01-01"
+                },
+                {
+                    "user_first_name": "Nirav Vashi",
+                    "emp_id": "NIRAV",
+                    "department_id": "25",
+                    "user_password": "NIRAV",
+                    "designation": "Business Development",
+                    "doj": "2010-01-01"
+                }
+            ]
 
         const datatopush = await Promise.all(
             data.map(async (ele) => ({
@@ -2244,7 +2614,7 @@ const insertingvaluesemp = async (req, res) => {
                 "user_password": "IDVE929",
                 "department_id": "6"
             }
-        ] 
+        ]
 
         const datatopush = await Promise.all(
             data.map(async (ele) => ({
@@ -2264,4 +2634,4 @@ const insertingvaluesemp = async (req, res) => {
     }
 }
 
-module.exports = { updatePassword, registerUser, loginUser, testMiddleware, logoutUser, insertingvalueshod,insertingvaluesemp }
+module.exports = { updatePassword, registerUser, loginUser, testMiddleware, logoutUser, insertingvalueshod, insertingvaluesemp }
