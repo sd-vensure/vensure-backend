@@ -154,7 +154,7 @@ const loginUser = async (req, res) => {
             //Fetch Designated Person Name and ID
 
             let fetchdesignatedperson = await knexConnect('emp_reporting_mapper')
-                .select('user.*', 'emp_reporting_mapper.*')
+                .select('user.*', 'emp_reporting_mapper.*','user.emp_id as main_emp_id')
                 .join('user', 'user.user_id', 'emp_reporting_mapper.reporting_id')
                 .where('emp_reporting_mapper.emp_id', userdata.user_id);
 
@@ -167,6 +167,7 @@ const loginUser = async (req, res) => {
                     "user_first_name": fetchdesignatedperson[0].user_first_name,
                     "user_contact": fetchdesignatedperson[0].user_contact,
                     "user_id": fetchdesignatedperson[0].user_id,
+                    "emp_id": fetchdesignatedperson[0].main_emp_id            
                 }
             }
 

@@ -1,6 +1,6 @@
 const express = require("express");
 const { authMiddlewareUser } = require("../../middleware");
-const {getPendingFormsForMarks,viewMyFormsNew, addForm, viewMyForms, getParticularForm,getParticularFormNew, getFormsDepartment, sendForVerification, getInProgressForms, approveReject, updateFormData, getTotalFormsTotalUsers, sendDepartmentFinancialYear, getSubmittedForms, addNewForm, updateFormDataNew, getFormsDepartmentNew, getTotalFormsTotalUsersNew, sendToDepartmentHead, approveRejectNew, updateFormDateAndMarks, getSubmittedFormsNew, editRequestForm, acceptEditRequest, viewEditRequests, updateFormDataSpecialNew } = require("./userformController");
+const {getPendingFormsForMarks,viewMyFormsNew, addForm, viewMyForms, getParticularForm,getParticularFormNew, getFormsDepartment, sendForVerification, getInProgressForms, approveReject, updateFormData, getTotalFormsTotalUsers, sendDepartmentFinancialYear, getSubmittedForms, addNewForm, updateFormDataNew, getFormsDepartmentNew, getTotalFormsTotalUsersNew, sendToDepartmentHead, approveRejectNew, updateFormDateAndMarks, getSubmittedFormsNew, editRequestForm, acceptEditRequest, viewEditRequests, updateFormDataSpecialNew, getassignedformstome } = require("./userformController");
 const router = express.Router();
 
 router.post("/add",authMiddlewareUser,addForm);
@@ -30,7 +30,8 @@ router.get("/getsubmittedforms",authMiddlewareUser,getSubmittedForms);
 router.get("/getsubmittedformsnew",authMiddlewareUser,getSubmittedFormsNew);
 
 router.post("/totalformstotalusers",authMiddlewareUser,getTotalFormsTotalUsers);
-router.post("/totalformstotalusersnew",authMiddlewareUser,getTotalFormsTotalUsersNew);
+// router.post("/totalformstotalusersnew",authMiddlewareUser,getTotalFormsTotalUsersNew);  this gives for department need to check
+router.post("/getassignedformstome",authMiddlewareUser,getassignedformstome);
 
 
 router.post("/getpendingmarksassign",authMiddlewareUser,getPendingFormsForMarks);

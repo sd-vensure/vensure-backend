@@ -221,14 +221,29 @@ const viewMyFormsNew = async (req, res) => {
         // let data=await knexConnect("user_form_track").select("*").where("user_id",user_id);
 
 
+        // let data = await knexConnect("user_form_track_new")
+        //     .select(
+        //         "user_form_track_new.*",
+        //         "user.*",
+        //         "department.*"
+        //     )
+        //     .join("user", "user_form_track_new.user_id", "user.user_id")
+        //     .join("department", "department.department_id", "user_form_track_new.department_id")
+        //     .where("user_form_track_new.user_id", user_id);
+
         let data = await knexConnect("user_form_track_new")
             .select(
                 "user_form_track_new.*",
                 "user.*",
-                "department.*"
+                "department.*",
+                knexConnect.raw("head_user.user_first_name as department_head_name"),
+                knexConnect.raw("head_user.emp_id as department_head_empid"),
+                knexConnect.raw("head_user.user_id as department_head_userid")
             )
             .join("user", "user_form_track_new.user_id", "user.user_id")
             .join("department", "department.department_id", "user_form_track_new.department_id")
+            .leftJoin("emp_reporting_mapper", "emp_reporting_mapper.emp_id", "user_form_track_new.user_id")
+            .leftJoin("user as head_user", "head_user.user_id", "emp_reporting_mapper.reporting_id")
             .where("user_form_track_new.user_id", user_id);
 
 
@@ -519,21 +534,22 @@ const getParticularFormNew = async (req, res) => {
 const sendForVerification = async (req, res) => {
 
     let uniqueid = req.params.uniqueid;
+    let formattedDate = moment().format('YYYY-MM-DD HH:mm:ss');
 
     try {
 
         let data = await knexConnect("user_form_track_new")
             .update(
                 {
-                    "is_shared": "Y"
+                    "is_shared": "Y",
+                    "shared_datetime": formattedDate
                 }
             )
             .where("form_id", uniqueid);
 
         return res.send({
             status: true,
-            message: "Sent for Approval",
-            test: "tyeuhda"
+            message: "Shared with HR"
         })
 
     } catch (error) {
@@ -585,13 +601,16 @@ const sendDepartmentFinancialYear = async (req, res) => {
 
     let finance = req.body.finance;
     let department_id = req.department_id;
+    let formattedDate = moment().format('YYYY-MM-DD HH:mm:ss');
+
 
     try {
 
         let data = await knexConnect("user_form_track")
             .update(
                 {
-                    "is_shared": "Y"
+                    "is_shared": "Y",
+                    "shared_datetime": formattedDate
                 }
             )
             .where("financial_year", finance)
@@ -996,10 +1015,10 @@ const getSubmittedFormsNew = async (req, res) => {
                 "user_form_track_new.*",
                 "user.*",
                 "department.*",
-                "designated_user.user_first_name as designated_user_name",
-                "designated_user.user_id as designated_user_id",
-                "designated_user.emp_id as designated_emp_id",
-                "designated_user.designation as designated_designation"
+                "designated_user.user_first_name as department_head_name",
+                "designated_user.user_id as department_head_userid",
+                "designated_user.emp_id as department_head_empid",
+                "designated_user.designation as department_head_designation"
             )
             .join("user", "user_form_track_new.user_id", "user.user_id")
             .join("department", "department.department_id", "user_form_track_new.department_id")
@@ -1116,17 +1135,126 @@ const getTotalFormsTotalUsersNew = async (req, res) => {
         let singleentry = await knexConnect("user_form_track_new").count("* as total").where("designated_id", user_id).andWhere("financial_year", financial_year).andWhere("is_shared", "N")
 
 
+        // let entries_data = await knexConnect("user_form_track_new")
+        //     .select(
+        //         "user_form_track_new.*",
+        //         "user.*",
+        //         "department.*"
+        //     )
+        //     .join("user", "user_form_track_new.user_id", "user.user_id")
+        //     .join("department", "department.department_id", "user_form_track_new.department_id")
+        //     .where("user_form_track_new.financial_year", financial_year)
+        //     .whereNot("user_form_track_new.is_verified", "Pending");
+
         let entries_data = await knexConnect("user_form_track_new")
             .select(
                 "user_form_track_new.*",
                 "user.*",
-                "department.*"
+                "department.*",
+                knexConnect.raw("head_user.user_first_name as department_head_name"),
+                knexConnect.raw("head_user.emp_id as department_head_empid"),
+                knexConnect.raw("head_user.user_id as department_head_userid")
             )
             .join("user", "user_form_track_new.user_id", "user.user_id")
             .join("department", "department.department_id", "user_form_track_new.department_id")
-            // .where("user_form_track.is_verified", "In Progress")
+            .leftJoin("emp_reporting_mapper", "emp_reporting_mapper.emp_id", "user_form_track_new.user_id")
+            .leftJoin("user as head_user", "head_user.user_id", "emp_reporting_mapper.reporting_id")
             .where("user_form_track_new.financial_year", financial_year)
             .whereNot("user_form_track_new.is_verified", "Pending");
+
+
+        if (entries_data.length > 0) {
+            return res.send({
+                status: true,
+                message: "Data Found",
+                total_persons: data[0].total,
+                total_forms_filled: count[0].total,
+                not_shared_forms: singleentry[0].total,
+                entries: entries_data
+            })
+        }
+        else {
+            return res.send({
+                status: false,
+                message: "No forms found",
+                total_persons: data[0].total,
+                total_forms_filled: count[0].total,
+                not_shared_forms: singleentry[0].total,
+                entries: entries_data
+            })
+        }
+
+    } catch (error) {
+
+        return res.send({
+            status: false,
+            message: "Error Occured",
+            data: error.message
+        })
+
+    }
+
+}
+
+
+const getassignedformstome = async (req, res) => {
+
+    let financial_year = req.body.financial_year || null;
+    let department_name = req.department_name;
+    let department_id = req.department_id;
+    let user_id = req.user_id;
+
+    try {
+
+        let data = await knexConnect("user").count("* as total").where("department_id", department_id);
+        let count = await knexConnect("user_form_track_new").count("* as total").where("department_id", department_id).andWhere("financial_year", financial_year);
+        let singleentry = await knexConnect("user_form_track_new").count("* as total").where("designated_id", user_id).andWhere("financial_year", financial_year).andWhere("is_shared", "N")
+
+
+        // let entries_data = await knexConnect("user_form_track_new")
+        //     .select(
+        //         "user_form_track_new.*",
+        //         "user.*",
+        //         "department.*"
+        //     )
+        //     .join("user", "user_form_track_new.user_id", "user.user_id")
+        //     .join("department", "department.department_id", "user_form_track_new.department_id")
+        //     .where("user_form_track_new.financial_year", financial_year)
+        //     .whereNot("user_form_track_new.is_verified", "Pending");
+
+        // let entries_data = await knexConnect("user_form_track_new")
+        //     .select(
+        //         "user_form_track_new.*",
+        //         "user.*",
+        //         "department.*",
+        //         knexConnect.raw("head_user.user_first_name as department_head_name"),
+        //         knexConnect.raw("head_user.emp_id as department_head_empid"),
+        //         knexConnect.raw("head_user.user_id as department_head_userid")
+        //     )
+        //     .join("user", "user_form_track_new.user_id", "user.user_id")
+        //     .join("department", "department.department_id", "user_form_track_new.department_id")
+        //     .leftJoin("emp_reporting_mapper", "emp_reporting_mapper.emp_id", "user_form_track_new.user_id")
+        //     .leftJoin("user as head_user", "head_user.user_id", "emp_reporting_mapper.reporting_id")
+        //     .where("user_form_track_new.financial_year", financial_year)
+        //     .whereNot("user_form_track_new.is_verified", "Pending");
+
+        let entries_data = await knexConnect("user_form_track_new")
+            .select(
+                "user_form_track_new.*",
+                "user.*",
+                "department.*",
+                knexConnect.raw("head_user.user_first_name as department_head_name"),
+                knexConnect.raw("head_user.emp_id as department_head_empid"),
+                knexConnect.raw("head_user.user_id as department_head_userid")
+            )
+            .join("user", "user_form_track_new.user_id", "user.user_id")
+            .join("department", "department.department_id", "user_form_track_new.department_id")
+            .leftJoin("emp_reporting_mapper", "emp_reporting_mapper.emp_id", "user_form_track_new.user_id")
+            .leftJoin("user as head_user", "head_user.user_id", "emp_reporting_mapper.reporting_id")
+            .where("user_form_track_new.financial_year", financial_year)
+            .whereNot("user_form_track_new.is_verified", "Pending")
+            .andWhere("emp_reporting_mapper.reporting_id", user_id); // Filter by given user_id as reporting_id
+
 
         if (entries_data.length > 0) {
             return res.send({
@@ -1249,23 +1377,47 @@ const getPendingFormsForMarks = async (req, res) => {
         //     .whereNull("user_form_new.kpi_obtained") // kpi_obtained = null
         //     .groupBy("user_form_track_new.form_id"); // Ensures distinct form_id while keeping all data
 
+        // let data = await knexConnect("user_form_track_new")
+        //     .select("user_form_track_new.*", "user.user_first_name", "user.emp_id", "user.designation", "department.department_name as department_name") // Select all from user_form_track_new and user
+        //     .join("user_form_new", "user_form_new.form_id", "user_form_track_new.form_id") // Join with user_form_new on form_id
+        //     .join("user", "user_form_track_new.user_id", "user.user_id") // Join with user table on user_id
+        //     .join("department", "department.department_id", "user.department_id") // Join with user table on user_id
+        //     .where("user_form_track_new.designated_id", user_id) // Filter by designated_id
+        //     .andWhere("user_form_track_new.financial_year", financial) // Filter by designated_id
+        //     .where((qb) => {
+        //         qb.whereNotNull("user_form_new.kpi_id")
+        //             .whereNotNull("user_form_new.kpi_complete")
+        //             .whereNull("user_form_new.kpi_obtained");
+        //     })
+        //     .groupBy("user_form_track_new.form_id"); // Ensure distinct form_id while keeping user data
+
         let data = await knexConnect("user_form_track_new")
-            .select("user_form_track_new.*", "user.user_first_name", "user.emp_id", "user.designation", "department.department_name as department_user") // Select all from user_form_track_new and user
+            .select(
+                "user_form_track_new.*",
+                "user.user_first_name",
+                "user.emp_id",
+                "user.designation",
+                "department.department_name as department_name",
+                knexConnect.raw("head_user.user_first_name as department_head_name"),
+                knexConnect.raw("head_user.emp_id as department_head_empid"),
+                knexConnect.raw("head_user.user_id as department_head_userid")
+            )
             .join("user_form_new", "user_form_new.form_id", "user_form_track_new.form_id") // Join with user_form_new on form_id
             .join("user", "user_form_track_new.user_id", "user.user_id") // Join with user table on user_id
-            .join("department", "department.department_id", "user.department_id") // Join with user table on user_id
+            .join("department", "department.department_id", "user.department_id") // Join with department table on department_id
+            .leftJoin("emp_reporting_mapper", "emp_reporting_mapper.emp_id", "user.user_id") // Get reporting_id
+            .leftJoin("user as head_user", "head_user.user_id", "emp_reporting_mapper.reporting_id") // Get department head details
             .where("user_form_track_new.designated_id", user_id) // Filter by designated_id
-            .andWhere("user_form_track_new.financial_year", financial) // Filter by designated_id
-            // .whereNotNull("user_form_new.kpi_id") // kpi_id != null
-            // .whereNull("user_form_new.kpi_complete") // kpi_target != null
-            // .whereNull("user_form_new.kpi_obtained") // kpi_obtained = null
+            .andWhere("user_form_track_new.financial_year", financial) // Filter by financial year
             .where((qb) => {
                 qb.whereNotNull("user_form_new.kpi_id")
                     .whereNotNull("user_form_new.kpi_complete")
                     .whereNull("user_form_new.kpi_obtained");
             })
+            .groupBy("user_form_track_new.form_id", "head_user.user_id", "head_user.user_first_name", "head_user.emp_id"); // Group by form_id and department head details
 
-            .groupBy("user_form_track_new.form_id"); // Ensure distinct form_id while keeping user data
+
+
 
         if (data.length > 0) {
             return res.send({
@@ -1441,7 +1593,7 @@ const acceptEditRequest = async (req, res) => {
 
 
 module.exports = {
-    acceptEditRequest, viewEditRequests, updateFormDataSpecialNew,
+    acceptEditRequest, viewEditRequests, updateFormDataSpecialNew, getassignedformstome,
     getPendingFormsForMarks, getSubmittedFormsNew,
     updateFormDateAndMarks, approveRejectNew,
     getTotalFormsTotalUsersNew, sendToDepartmentHead,
