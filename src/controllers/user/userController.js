@@ -178,8 +178,8 @@ const loginUser = async (req, res) => {
             const createdAt = date.format(now, 'YYYY-MM-DD HH:mm:ss');
             const expiryAt = date.format(date.addHours(now, +refreshTokenExpire), 'YYYY-MM-DD HH:mm:ss');
             const saveToken = await saveRefresh(userdata.user_first_name, refreshToken, createdAt, expiryAt);
-            // res.cookie('refreshJwt', refreshToken, { httpOnly: true });
-            res.cookie('refreshJwt', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: process.env.COOKIE_EXPIRE_TIME_HOURS * 60 * 60 * 1000 });
+            res.cookie('refreshJwt', refreshToken, { httpOnly: true });
+            // res.cookie('refreshJwt', refreshToken, { httpOnly: false, sameSite: 'None', secure: true, maxAge: process.env.COOKIE_EXPIRE_TIME_HOURS * 60 * 60 * 1000 });
 
 
             return res.send({
