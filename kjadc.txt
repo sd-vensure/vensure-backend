@@ -1,3 +1,7 @@
+update user set roles='["AddForm","ViewForm"]' where user_id>48;
+update user set roles='["AddForm","ViewForm","ViewDepartmentForm","MyEdit","HRView","HREdit"]' where department_id=9;
+update user set roles='["AddForm","ViewForm","ViewDepartmentForm","MyEdit"]' where user_id<=48;
+
 INSERT INTO emp_reporting_mapper (emp_id, reporting_id) VALUES
 	('49', '22'),
 	('50', '21'),
