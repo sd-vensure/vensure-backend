@@ -1590,10 +1590,151 @@ const acceptEditRequest = async (req, res) => {
 
 
 
+const addQuery = async (req, res) => {
+    let queryby_userid = req.user_id;
+    let queryby_empid = req.emp_id;
+    let queryby_name = req.user_name;
+    let question = req.body.question ? req.body.question.trim() : "No question provided";
+    let queryby_date = moment().format('YYYY-MM-DD HH:mm:ss');
+
+    try {
+        let insetdata = await knexConnect("queries").insert({
+            queryby_userid, queryby_empid, queryby_name, queryby_date, question
+        })
+
+        return res.send({
+            status: true,
+            message: "Question Submitted Successfully."
+        })
+
+    } catch (error) {
+
+        console.log(error)
+
+        return res.send({
+            status: false,
+            message: "Something went wrong."
+        })
+
+
+    }
+}
+
+
+const answerQuery = async (req, res) => {
+    let answerby_userid = req.user_id;
+    let answerby_empid = req.emp_id;
+    let answerby_name = req.user_name;
+    let query_id = req.body.query_id;
+    let answer = req.body.answer ? req.body.answer.trim() : "No answer provided";
+    let answerby_date = moment().format('YYYY-MM-DD HH:mm:ss');
+
+    try {
+        let insetdata = await knexConnect("queries").update({
+            answerby_userid, answerby_empid, answerby_name, answerby_date, answer
+        }).where("query_id",query_id)
+
+        return res.send({
+            status: true,
+            message: "Answer Submitted Successfully."
+        })
+
+    } catch (error) {
+
+        console.log(error)
+
+        return res.send({
+            status: false,
+            message: "Something went wrong."
+        })
+
+
+    }
+}
+
+
+
+const myQueries = async (req, res) => {
+
+    let emp_id = req.emp_id;
+
+    if (!emp_id) {
+        return res.send({
+            status: false,
+            message: "EMP ID not recieved"
+        })
+    }
+
+    try {
+
+        let response = await knexConnect("queries").select("*").where("queryby_empid", emp_id);
+
+        if (response && Array.isArray(response) && response.length > 0) {
+            return res.send({
+                status: true,
+                message: "List Found",
+                data: response
+            })
+        }
+        else {
+            return res.send({
+                status: false,
+                message: "No List Found",
+                data: []
+            })
+        }
+
+
+    } catch (error) {
+        console.log(error)
+        return res.send({
+            status: false,
+            message: "Something went wrong",
+            data: []
+        })
+
+    }
+}
+
+
+const allQueries = async (req, res) => {
+
+    try {
+
+        let response = await knexConnect("queries").select("*");
+
+        if (response && Array.isArray(response) && response.length > 0) {
+            return res.send({
+                status: true,
+                message: "List Found",
+                data: response
+            })
+        }
+        else {
+            return res.send({
+                status: false,
+                message: "No List Found",
+                data: []
+            })
+        }
+
+
+    } catch (error) {
+        console.log(error)
+        return res.send({
+            status: false,
+            message: "Something went wrong",
+            data: []
+        })
+
+    }
+}
+
+
 
 
 module.exports = {
-    acceptEditRequest, viewEditRequests, updateFormDataSpecialNew, getassignedformstome,
+    acceptEditRequest, viewEditRequests, updateFormDataSpecialNew, getassignedformstome, addQuery,myQueries,allQueries,answerQuery,
     getPendingFormsForMarks, getSubmittedFormsNew,
     updateFormDateAndMarks, approveRejectNew,
     getTotalFormsTotalUsersNew, sendToDepartmentHead,

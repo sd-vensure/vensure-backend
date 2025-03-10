@@ -1,6 +1,6 @@
 const express = require("express");
 const { authMiddlewareUser } = require("../../middleware");
-const {getPendingFormsForMarks,viewMyFormsNew, addForm, viewMyForms, getParticularForm,getParticularFormNew, getFormsDepartment, sendForVerification, getInProgressForms, approveReject, updateFormData, getTotalFormsTotalUsers, sendDepartmentFinancialYear, getSubmittedForms, addNewForm, updateFormDataNew, getFormsDepartmentNew, getTotalFormsTotalUsersNew, sendToDepartmentHead, approveRejectNew, updateFormDateAndMarks, getSubmittedFormsNew, editRequestForm, acceptEditRequest, viewEditRequests, updateFormDataSpecialNew, getassignedformstome } = require("./userformController");
+const {getPendingFormsForMarks,viewMyFormsNew, addForm, viewMyForms, getParticularForm,getParticularFormNew, getFormsDepartment, sendForVerification, getInProgressForms, approveReject, updateFormData, getTotalFormsTotalUsers, sendDepartmentFinancialYear, getSubmittedForms, addNewForm, updateFormDataNew, getFormsDepartmentNew, getTotalFormsTotalUsersNew, sendToDepartmentHead, approveRejectNew, updateFormDateAndMarks, getSubmittedFormsNew, editRequestForm, acceptEditRequest, viewEditRequests, updateFormDataSpecialNew, getassignedformstome, addQuery, myQueries, allQueries, answerQuery } = require("./userformController");
 const router = express.Router();
 
 router.post("/add",authMiddlewareUser,addForm);
@@ -48,6 +48,11 @@ router.post("/editrequest",authMiddlewareUser,editRequestForm)
 router.get("/vieweditrequest/:financial",authMiddlewareUser,viewEditRequests)
 router.put("/acceptrejectrequest",acceptEditRequest)
 
+
+router.post("/addquery",authMiddlewareUser,addQuery);
+router.get("/myqueries",authMiddlewareUser,myQueries);
+router.get("/allqueries",authMiddlewareUser,allQueries);
+router.put("/answerquery",authMiddlewareUser,answerQuery);
 
 
 module.exports = router
