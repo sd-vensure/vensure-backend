@@ -568,16 +568,34 @@ const sendForVerification = async (req, res) => {
 const sendToDepartmentHead = async (req, res) => {
 
     let uniqueid = req.params.uniqueid;
+    let userid = req.params.userid;
+    let reportingid = req.params.reportingid;
+    let formattedDate = moment().format('YYYY-MM-DD HH:mm:ss');
+
 
     try {
 
-        let data = await knexConnect("user_form_track_new")
-            .update(
-                {
-                    "is_verified": "In Progress"
-                }
-            )
-            .where("form_id", uniqueid);
+        if (parseInt(userid) == parseInt(reportingid)) {
+            let data = await knexConnect("user_form_track_new")
+                .update(
+                    {
+                        "is_verified": "Verified",
+                        "is_shared": "Y",
+                        "shared_datetime": formattedDate
+                    }
+                )
+                .where("form_id", uniqueid);
+        }
+        else {
+            let data = await knexConnect("user_form_track_new")
+                .update(
+                    {
+                        "is_verified": "In Progress"
+                    }
+                )
+                .where("form_id", uniqueid);
+        }
+
 
         return res.send({
             status: true,
@@ -1397,6 +1415,7 @@ const getPendingFormsForMarks = async (req, res) => {
                 "user.user_first_name",
                 "user.emp_id",
                 "user.designation",
+                "user.doj",
                 "department.department_name as department_name",
                 knexConnect.raw("head_user.user_first_name as department_head_name"),
                 knexConnect.raw("head_user.emp_id as department_head_empid"),
@@ -1632,7 +1651,7 @@ const answerQuery = async (req, res) => {
     try {
         let insetdata = await knexConnect("queries").update({
             answerby_userid, answerby_empid, answerby_name, answerby_date, answer
-        }).where("query_id",query_id)
+        }).where("query_id", query_id)
 
         return res.send({
             status: true,
@@ -1734,7 +1753,7 @@ const allQueries = async (req, res) => {
 
 
 module.exports = {
-    acceptEditRequest, viewEditRequests, updateFormDataSpecialNew, getassignedformstome, addQuery,myQueries,allQueries,answerQuery,
+    acceptEditRequest, viewEditRequests, updateFormDataSpecialNew, getassignedformstome, addQuery, myQueries, allQueries, answerQuery,
     getPendingFormsForMarks, getSubmittedFormsNew,
     updateFormDateAndMarks, approveRejectNew,
     getTotalFormsTotalUsersNew, sendToDepartmentHead,

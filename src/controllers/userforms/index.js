@@ -15,7 +15,7 @@ router.get("/getparticularformnew/:uniqueid",authMiddlewareUser,getParticularFor
 router.get("/getformdepartment/:departmentid",authMiddlewareUser,getFormsDepartment);
 router.get("/getformdepartmentnew/:departmentid",authMiddlewareUser,getFormsDepartmentNew);
 
-router.get("/sendtodepartmenthead/:uniqueid",authMiddlewareUser,sendToDepartmentHead);
+router.get("/sendtodepartmenthead/:uniqueid/:userid/:reportingid",authMiddlewareUser,sendToDepartmentHead);
 
 router.get("/sendforverification/:uniqueid",authMiddlewareUser,sendForVerification);
 
