@@ -1225,7 +1225,7 @@ const insertingvaluesemp = async (req, res) => {
             {
                 "emp_id": "IDVE954",
                 "user_first_name": "Harshal Supadu Patil",
-                "designation": "Apprentice",
+                "designation": "Officer",
                 "doj": "2025-02-24",
                 "user_password": "IDVE954",
                 "department_id": "2"

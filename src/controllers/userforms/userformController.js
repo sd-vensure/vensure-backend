@@ -882,7 +882,10 @@ const updateFormDataSpecialNew = async (req, res) => {
                             kpi_quarter: ele2.quarter,
                             kpi_weightage: ele2.number,
                             kpi_complete: ele2.completion,
-                            kpi_obtained: ele2.obtained
+                            kpi_obtained: ele2.obtained,
+                            user_remarks: ele2.user_remarks,
+                            designated_remarks: ele2.designated_remarks
+
                         }
                         datatopush.push(createobj)
                     })
@@ -1327,7 +1330,9 @@ const updateFormDateAndMarks = async (req, res) => {
                         datatopush.push({
                             "kpi_id": ele2.id,
                             "kpi_complete": (ele2.completion == "" || ele2.completion == null) ? null : ele2.completion,
-                            "kpi_obtained": (ele2.obtained == "" || ele2.obtained == null) ? null : ele2.obtained
+                            "kpi_obtained": (ele2.obtained == "" || ele2.obtained == null) ? null : ele2.obtained,
+                            "user_remarks": (ele2.user_remarks == null || ele2.user_remarks.trim() == "") ? null : ele2.user_remarks.trim(),
+                            "designated_remarks": (ele2.designated_remarks == null || ele2?.designated_remarks.trim() == "") ? null : ele2.designated_remarks.trim() 
                         })
                     })
 
