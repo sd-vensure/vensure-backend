@@ -531,6 +531,103 @@ const getParticularFormNew = async (req, res) => {
 }
 
 
+const getParticularFormNewAllDetails = async (req, res) => {
+
+    let formid = req.query.formid;
+    let financial = req.query.financial;
+    let empid = req.query.empid;
+
+    let uniqueid = null;
+
+    try {
+
+        if (formid) {
+            uniqueid = formid;
+        }
+        else if (financial && empid) {
+            let finduserform = await knexConnect("user").select("*").where("emp_id", empid);
+            finduserform = finduserform[0];
+            let formtrack = await knexConnect("user_form_track_new").select("*").where({
+                "financial_year": financial,
+                "user_id": finduserform.user_id
+            })
+
+            if (formtrack && Array.isArray(formtrack) && formtrack.length > 0) {
+                uniqueid = formtrack[0].form_id;
+            }
+            else {
+                return res.send({
+                    status: false,
+                    message: "No form with given Financial Year and UserID found."
+                })
+            }
+        }
+        else {
+            return res.send({
+                "status": false,
+                "message": "Please provide form id or empid with financial year"
+            })
+        }
+
+        let trackingdata = await knexConnect("user_form_track_new")
+            .select("*")
+            .where("form_id", uniqueid);
+
+        if (!(trackingdata && Array.isArray(trackingdata) && trackingdata.length > 0)) {
+            return res.send({
+                status: false,
+                message: "No Form Found"
+            })
+        }
+
+        trackingdata = trackingdata[0];
+
+        let mainuser = await knexConnect("user")
+            .select("*")
+            .join("department", "user.department_id", "department.department_id") // Assuming the join is on 'department_id'
+            .where("user.user_id", trackingdata.user_id);
+        
+        // console.log(mainuser)
+
+        let designated_user = await knexConnect("user")
+            .select("*")
+            .join("department", "user.department_id", "department.department_id") // Assuming the join is on 'department_id'
+            .where("user.user_id", trackingdata.designated_id)
+
+        let data = await knexConnect("user_form_track_new")
+            .select(
+                "user_form_track_new.*",
+                "user_form_new.*",
+                "user.*",
+            )
+            .join("user", "user_form_track_new.user_id", "user.user_id")
+            .join("user_form_new", "user_form_new.form_id", "user_form_track_new.form_id")
+            .where("user_form_track_new.form_id", uniqueid);
+
+
+        return res.send({
+            status: true,
+            message: "Form Found",
+            data: data,
+            main_user: mainuser[0],
+            designated_user: designated_user[0],
+            tracking_data: trackingdata
+        })
+
+
+    } catch (error) {
+
+        return res.send({
+            status: false,
+            message: "Error Occured",
+            data: error.message
+        })
+
+    }
+
+}
+
+
 const sendForVerification = async (req, res) => {
 
     let uniqueid = req.params.uniqueid;
@@ -1332,7 +1429,7 @@ const updateFormDateAndMarks = async (req, res) => {
                             "kpi_complete": (ele2.completion == "" || ele2.completion == null) ? null : ele2.completion,
                             "kpi_obtained": (ele2.obtained == "" || ele2.obtained == null) ? null : ele2.obtained,
                             "user_remarks": (ele2.user_remarks == null || ele2.user_remarks.trim() == "") ? null : ele2.user_remarks.trim(),
-                            "designated_remarks": (ele2.designated_remarks == null || ele2?.designated_remarks.trim() == "") ? null : ele2.designated_remarks.trim() 
+                            "designated_remarks": (ele2.designated_remarks == null || ele2?.designated_remarks.trim() == "") ? null : ele2.designated_remarks.trim()
                         })
                     })
 
@@ -1754,6 +1851,129 @@ const allQueries = async (req, res) => {
     }
 }
 
+const getUserDashboard = async (req, res) => {
+    let financial = req.params.financial;
+    let user_id = req.user_id || "137";
+
+    try {
+
+        let countsdata = await knexConnect("user_form_track_new").select("*").where({
+            "user_id": user_id,
+            "financial_year": financial
+        })
+
+        // console.log(countsdata)
+
+        let formid = null;
+
+        if (countsdata && Array.isArray(countsdata) && countsdata.length > 0) {
+            if (countsdata[0].is_verified == "Verified" && countsdata[0].is_shared == "Y") {
+                formid = countsdata[0].form_id;
+            }
+            else {
+                return res.send({
+                    status: false,
+                    message: "Form acceptance to HR or designated person is pending."
+                })
+            }
+        }
+        else {
+            return res.send({
+                status: false,
+                message: "No form found."
+            })
+        }
+
+        if (!formid) {
+            return res.send({
+                status: false,
+                message: "Form ID not found"
+            })
+        }
+
+
+        // const datatosend = await knexConnect('user_form_new')
+        //     .select('kpi_quarter')
+        //     .countDistinct('kpi_target as total_targets')
+        //     .select(
+        //         knexConnect.raw(
+        //             'COUNT(DISTINCT CASE WHEN kpi_complete IS NOT NULL AND kpi_complete != "" THEN kpi_complete END) as total_completions'
+        //         )
+        //     )
+        //     .where('form_id', formid)
+        //     .groupBy('kpi_quarter')
+        //     .orderBy('kpi_quarter');
+
+        const datatosend = await knexConnect('user_form_new')
+            .select('kpi_quarter')
+            .count('kpi_target as total_targets')  // This will count all rows in the kpi_target column
+            .select(
+                knexConnect.raw(
+                    'COUNT(DISTINCT CASE WHEN kpi_complete IS NOT NULL AND kpi_complete != "" THEN kpi_complete END) as total_completions'
+                )
+            )
+            .where('form_id', formid)
+            .groupBy('kpi_quarter')
+            .orderBy('kpi_quarter');
+
+
+
+        if (datatosend && Array.isArray(datatosend) && datatosend.length > 0) {
+            return res.send({
+                status: true,
+                message: "Form Fetched.",
+                unique_form_id: formid,
+                countofquartersubmissions: datatosend
+            })
+        }
+
+        else {
+            return res.send({
+                status: false,
+                message: "Error Fetching data"
+            })
+
+        }
+
+
+
+    } catch (error) {
+        console.log(error)
+        return res.send({
+            status: false,
+            data: error.message,
+            message: "Something went wrong."
+        })
+    }
+}
+
+
+const getKPIsForFormAndQuarter=async(req,res)=>{
+    let formid = req.params.formid;
+    let quarter = req.params.quarter;
+
+    try {
+
+        let response=await knexConnect("user_form_new").select("*").where({
+            "kpi_quarter":quarter,
+            "form_id":formid
+        });
+
+        return res.send({
+            status:true,
+            data:response
+        })
+
+        
+    } catch (error) {
+        return res.send({
+            status: false,
+            data: error.message,
+            message: "Something went wrong."
+        })
+    }
+}
+
 
 
 
@@ -1766,5 +1986,6 @@ module.exports = {
     viewMyFormsNew, getSubmittedForms, sendDepartmentFinancialYear,
     getTotalFormsTotalUsers, addForm, viewMyForms, getParticularForm,
     getParticularFormNew, getFormsDepartment, sendForVerification,
-    getInProgressForms, approveReject, updateFormData, editRequestForm
+    getInProgressForms, approveReject, updateFormData, editRequestForm, getParticularFormNewAllDetails,
+    getUserDashboard,getKPIsForFormAndQuarter
 }

@@ -384,7 +384,7 @@ const insertingvalueshod = async (req, res) => {
                     "department_id": "9",
                     "user_password": "IDVE307",
                     "designation": "Senior Manager",
-                    "doj": "2021-09-22"
+                    "doj": "2020-09-22"
                 },
                 {
                     "user_first_name": "Bandu Sandurao Birsane",

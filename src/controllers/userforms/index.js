@@ -1,6 +1,6 @@
 const express = require("express");
 const { authMiddlewareUser } = require("../../middleware");
-const {getPendingFormsForMarks,viewMyFormsNew, addForm, viewMyForms, getParticularForm,getParticularFormNew, getFormsDepartment, sendForVerification, getInProgressForms, approveReject, updateFormData, getTotalFormsTotalUsers, sendDepartmentFinancialYear, getSubmittedForms, addNewForm, updateFormDataNew, getFormsDepartmentNew, getTotalFormsTotalUsersNew, sendToDepartmentHead, approveRejectNew, updateFormDateAndMarks, getSubmittedFormsNew, editRequestForm, acceptEditRequest, viewEditRequests, updateFormDataSpecialNew, getassignedformstome, addQuery, myQueries, allQueries, answerQuery } = require("./userformController");
+const {getPendingFormsForMarks,viewMyFormsNew, addForm, viewMyForms, getParticularForm,getParticularFormNew, getFormsDepartment, sendForVerification, getInProgressForms, approveReject, updateFormData, getTotalFormsTotalUsers, sendDepartmentFinancialYear, getSubmittedForms, addNewForm, updateFormDataNew, getFormsDepartmentNew, getTotalFormsTotalUsersNew, sendToDepartmentHead, approveRejectNew, updateFormDateAndMarks, getSubmittedFormsNew, editRequestForm, acceptEditRequest, viewEditRequests, updateFormDataSpecialNew, getassignedformstome, addQuery, myQueries, allQueries, answerQuery, getParticularFormNewAllDetails,getUserDashboard, getKPIsForFormAndQuarter } = require("./userformController");
 const router = express.Router();
 
 router.post("/add",authMiddlewareUser,addForm);
@@ -11,6 +11,7 @@ router.get("/viewmyformnew/:userid",authMiddlewareUser,viewMyFormsNew);
 
 router.get("/getparticularform/:uniqueid",authMiddlewareUser,getParticularForm);
 router.get("/getparticularformnew/:uniqueid",authMiddlewareUser,getParticularFormNew);
+router.get("/getparticularformnewalldetails",authMiddlewareUser,getParticularFormNewAllDetails);
 
 router.get("/getformdepartment/:departmentid",authMiddlewareUser,getFormsDepartment);
 router.get("/getformdepartmentnew/:departmentid",authMiddlewareUser,getFormsDepartmentNew);
@@ -48,11 +49,15 @@ router.post("/editrequest",authMiddlewareUser,editRequestForm)
 router.get("/vieweditrequest/:financial",authMiddlewareUser,viewEditRequests)
 router.put("/acceptrejectrequest",acceptEditRequest)
 
-
+// For Queries
 router.post("/addquery",authMiddlewareUser,addQuery);
 router.get("/myqueries",authMiddlewareUser,myQueries);
 router.get("/allqueries",authMiddlewareUser,allQueries);
 router.put("/answerquery",authMiddlewareUser,answerQuery);
+
+// For User Dashboard
+router.get("/userdashboard/:financial",authMiddlewareUser,getUserDashboard);
+router.get("/getkpis/:formid/:quarter",authMiddlewareUser,getKPIsForFormAndQuarter)
 
 
 module.exports = router
