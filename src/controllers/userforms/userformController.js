@@ -1906,6 +1906,8 @@ const getUserDashboard = async (req, res) => {
 
         const datatosend = await knexConnect('user_form_new')
             .select('kpi_quarter')
+            .select(knexConnect.raw('SUM(COALESCE(kpi_obtained, 0)) AS total_obtained'))
+            .select(knexConnect.raw('SUM(COALESCE(kpi_weightage, 0)) AS total_weightage'))
             .count('kpi_target as total_targets')  // This will count all rows in the kpi_target column
             .select(
                 knexConnect.raw(
