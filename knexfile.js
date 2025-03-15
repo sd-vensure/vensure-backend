@@ -10,10 +10,10 @@ module.exports = {
   development: {
     client: 'mysql2',
     connection: {
-      host: 'localhost',
-      user: 'root',
-      password: '',
-      database: 'vensure-database'
+      host: process.env.MYSQL_HOST,
+      user: process.env.MYSQL_USER,
+      password: process.env.MYSQL_PASSWORD,
+      database: process.env.MYSQL_DATABASE
     },
     migrations: {
       directory: './src/db/migrations',
