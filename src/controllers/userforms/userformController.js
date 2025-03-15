@@ -586,7 +586,7 @@ const getParticularFormNewAllDetails = async (req, res) => {
             .select("*")
             .join("department", "user.department_id", "department.department_id") // Assuming the join is on 'department_id'
             .where("user.user_id", trackingdata.user_id);
-        
+
         // console.log(mainuser)
 
         let designated_user = await knexConnect("user")
@@ -1904,21 +1904,38 @@ const getUserDashboard = async (req, res) => {
         //     .groupBy('kpi_quarter')
         //     .orderBy('kpi_quarter');
 
+        // const datatosend = await knexConnect('user_form_new')
+        //     .select('kpi_quarter')
+        //     .select(knexConnect.raw('SUM(COALESCE(kpi_obtained, 0)) AS total_obtained'))
+        //     .select(knexConnect.raw('SUM(COALESCE(kpi_weightage, 0)) AS total_weightage'))
+        //     .count('kpi_target as total_targets') 
+        //     .select(
+        //         knexConnect.raw(
+        //             'COUNT(DISTINCT CASE WHEN kpi_complete IS NOT NULL AND kpi_complete != "" THEN kpi_complete END) as total_completions'
+        //         )
+        //     )
+        //     .where('form_id', formid)
+        //     // .andWhere('kpi_target', formid)
+        //     .whereNotNull('kpi_target')
+        //     .groupBy('kpi_quarter')
+        //     .orderBy('kpi_quarter');
+
+
         const datatosend = await knexConnect('user_form_new')
             .select('kpi_quarter')
             .select(knexConnect.raw('SUM(COALESCE(kpi_obtained, 0)) AS total_obtained'))
             .select(knexConnect.raw('SUM(COALESCE(kpi_weightage, 0)) AS total_weightage'))
-            .count('kpi_target as total_targets')  // This will count all rows in the kpi_target column
+            .count('kpi_target as total_targets')
             .select(
                 knexConnect.raw(
-                    'COUNT(DISTINCT CASE WHEN kpi_complete IS NOT NULL AND kpi_complete != "" THEN kpi_complete END) as total_completions'
+                    'COUNT(DISTINCT CASE WHEN NULLIF(kpi_complete, "") IS NOT NULL THEN kpi_complete END) as total_completions'
                 )
             )
             .where('form_id', formid)
-            // .andWhere('kpi_target', formid)
             .whereNotNull('kpi_target')
             .groupBy('kpi_quarter')
             .orderBy('kpi_quarter');
+
 
 
 
@@ -1952,23 +1969,23 @@ const getUserDashboard = async (req, res) => {
 }
 
 
-const getKPIsForFormAndQuarter=async(req,res)=>{
+const getKPIsForFormAndQuarter = async (req, res) => {
     let formid = req.params.formid;
     let quarter = req.params.quarter;
 
     try {
 
-        let response=await knexConnect("user_form_new").select("*").where({
-            "kpi_quarter":quarter,
-            "form_id":formid
+        let response = await knexConnect("user_form_new").select("*").where({
+            "kpi_quarter": quarter,
+            "form_id": formid
         });
 
         return res.send({
-            status:true,
-            data:response
+            status: true,
+            data: response
         })
 
-        
+
     } catch (error) {
         return res.send({
             status: false,
@@ -1991,5 +2008,5 @@ module.exports = {
     getTotalFormsTotalUsers, addForm, viewMyForms, getParticularForm,
     getParticularFormNew, getFormsDepartment, sendForVerification,
     getInProgressForms, approveReject, updateFormData, editRequestForm, getParticularFormNewAllDetails,
-    getUserDashboard,getKPIsForFormAndQuarter
+    getUserDashboard, getKPIsForFormAndQuarter
 }
