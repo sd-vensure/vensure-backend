@@ -1915,6 +1915,8 @@ const getUserDashboard = async (req, res) => {
                 )
             )
             .where('form_id', formid)
+            // .andWhere('kpi_target', formid)
+            .whereNotNull('kpi_target')
             .groupBy('kpi_quarter')
             .orderBy('kpi_quarter');
 
